@@ -1,0 +1,49 @@
+services:
+  opencode-vps:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: opencode-vps
+    hostname: opencode-vps
+    restart: unless-stopped
+    environment:
+      - OPENCODE_SERVER_PASSWORD=${OPENCODE_SERVER_PASSWORD}
+      - CLOUDFLARE_TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+      # Si usas un proxy corporativo:
+      # - HTTPS_PROXY=http://proxy.example.com:8080
+      # - NO_PROXY=localhost,127.0.0.1
+    volumes:
+      # Persistencia de autenticacion de OpenCode (API keys)
+      - opencode-auth:/home/cloud/.local/share/opencode
+      # Configuracion de OpenCode
+      - opencode-config:/home/cloud/.config/opencode
+      # Certificados y config del Cloudflare Tunnel
+      - opencode-tunnel:/home/cloud/.cloudflared
+      # Proyectos y codigo fuente
+      - opencode-proyectos:/home/cloud/proyectos
+      # SSH keys del usuario cloud
+      - opencode-ssh:/home/cloud/.ssh
+    ports:
+      # Puerto 4096 para Cloudflare Tunnel en el host
+      - "4096:4096"
+      # Puerto 22 solo para acceso SSH directo (fallback)
+      # Si usas Cloudflare Tunnel exclusivamente, puedes quitar esta linea
+      - "2222:22"
+    networks:
+      - opencode-net
+
+networks:
+  opencode-net:
+    driver: bridge
+
+volumes:
+  opencode-auth:
+    driver: local
+  opencode-config:
+    driver: local
+  opencode-tunnel:
+    driver: local
+  opencode-proyectos:
+    driver: local
+  opencode-ssh:
+    driver: local

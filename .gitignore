@@ -1,0 +1,9 @@
+# Cloudflare tunnel credentials (se crean al hacer tunnel login)
+.cloudflared/*.json
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
