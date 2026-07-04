@@ -19,7 +19,9 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     supervisor \
     xdg-utils \
-    && rm -rf /var/lib/apt/lists/*
+    openssh-server \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
 
 # ============================================================
 # 2. OpenCode (binario estatico, sin Node.js)
@@ -57,6 +59,13 @@ RUN useradd -m -s /bin/bash cloud \
     && echo "cloud:changeme" | chpasswd
 
 # ============================================================
+# 5b. Configurar SSH (permitir auth por contraseña)
+# ============================================================
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config \
+    && sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config \
+    && echo "AllowUsers devadmin cloud" >> /etc/ssh/sshd_config
+
+# ============================================================
 # 6. Workspace del agente
 # ============================================================
 RUN mkdir -p /home/cloud/proyectos \
@@ -70,6 +79,7 @@ COPY config/opencode.json /home/cloud/.config/opencode/opencode.json
 COPY config/cloudflared.yml /home/cloud/.cloudflared/config.yml
 COPY supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 COPY supervisor/opencode-web.conf /etc/supervisor/conf.d/opencode-web.conf
+COPY supervisor/sshd.conf /etc/supervisor/conf.d/sshd.conf
 
 RUN chown -R cloud:cloud /home/cloud/.config/opencode/opencode.json \
     && chown -R cloud:cloud /home/cloud/.cloudflared/config.yml

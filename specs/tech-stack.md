@@ -9,6 +9,7 @@
 | Tunnel     | Cloudflare Tunnel | cloudflared (instalado en el HOST) |
 | CLI GitHub | gh        | última estable |
 | Shell      | bash + tmux | — |
+| SSH        | openssh-server | dentro del contenedor |
 
 ## Arquitectura
 

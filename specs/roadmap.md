@@ -21,13 +21,18 @@ responde en `localhost:4096` dentro del contenedor. ✅
 
 ## Fase 2: Autenticación OpenCode Go
 
-- [ ] Ejecutar `opencode auth login --provider opencode-go`
-- [ ] Obtener API key de https://opencode.ai/auth
-- [ ] Verificar que los modelos Go aparecen en `/models`
-- [ ] Verificar que `/init` funciona en un proyecto
+- [x] Instalar `openssh-server` en el contenedor
+- [x] Configurar `sshd_config` para permitir autenticación por contraseña
+- [x] Agregar `supervisor/sshd.conf` para gestionar sshd
+- [x] Agregar `OPENCODE_GO_API_KEY` al `.env`
+- [x] Inyectar `OPENCODE_GO_API_KEY` al contenedor via docker-compose
+- [x] Ejecutar `opencode auth login --provider opencode-go`
+- [x] Obtener API key de https://opencode.ai/auth
+- [x] Verificar que los modelos Go aparecen en `/models`
+- [x] Verificar que `/init` funciona en un proyecto
 
 **Criterio de éxito:** OpenCode responde con un modelo Go y puede analizar
-un proyecto.
+un proyecto. ✅
 
 ---
 
@@ -83,7 +88,7 @@ volúmenes se pueden respaldar.
 | Fase | Estado |
 |------|--------|
 | Fase 1: Contenedor base | ✅ Completada |
-| Fase 2: Autenticación | ⬜ Pendiente |
+| Fase 2: Autenticación | ✅ Completada |
 | Fase 3: Tunnel | ✅ Completada |
 | Fase 4: GitHub | ⬜ Pendiente |
 | Fase 5: Operación | ⬜ Pendiente |

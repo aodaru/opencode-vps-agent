@@ -9,6 +9,7 @@ services:
     environment:
       - OPENCODE_SERVER_PASSWORD=${OPENCODE_SERVER_PASSWORD}
       - CLOUDFLARE_TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+      - OPENCODE_GO_API_KEY=${OPENCODE_GO_API_KEY}
       # Si usas un proxy corporativo:
       # - HTTPS_PROXY=http://proxy.example.com:8080
       # - NO_PROXY=localhost,127.0.0.1
