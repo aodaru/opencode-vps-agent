@@ -99,8 +99,8 @@ volúmenes se pueden respaldar.
 ## Notas de implementación
 
 ### Configuración actual
-- **Servidor**: VPS `172.9.30.113` (IP privada: `192.168.216.5`)
-- **Usuario SSH**: `ubuntu` con key `~/.ssh/id_rsa`
+- **Servidor**: VPS `10.0.5.16` (TrueNAS / FreeBSD)
+- **Usuario SSH**: `truenas_admin` con key `~/.ssh/id_ed25519_github`
 - **Directorio**: `~/opencode-vps/`
 - **Password web**: `OPENCODE_SERVER_PASSWORD` en `.env`
 - **Tunnel**: Cloudflare token-based (no credentials-file)

@@ -28,7 +28,7 @@ Configurar la autenticación con el provider **OpenCode Go** (suscripción $10/m
 
 ## Contexto
 
-- **Servidor**: VPS `172.9.30.113`
+- **Servidor**: VPS `10.0.5.16`
 - **Directorio de trabajo**: `~/opencode-vps/`
 - **Contenedor**: Docker Compose con servicio único
 - **Provider**: OpenCode Go ($10/mes)

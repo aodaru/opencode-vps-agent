@@ -28,14 +28,14 @@ Adaptado de una guía original de Claude Code a OpenCode, aprovechando:
 
 | Parámetro | Valor |
 |-----------|-------|
-| IP del VPS | `172.9.30.113` |
-| Usuario SSH | `ubuntu` |
-| SSH Key | `/home/soporte/.ssh/id_rsa` |
-| SO Host | Ubuntu 24.04 LTS |
+| IP del VPS | `10.0.5.16` |
+| Usuario SSH | `truenas_admin` |
+| SSH Key | `~/.ssh/id_ed25519_github` |
+| SO Host | TrueNAS (FreeBSD) |
 
 ### Conexión SSH
 ```bash
-ssh -i /home/soporte/.ssh/id_rsa ubuntu@172.9.30.113
+ssh -i ~/.ssh/id_ed25519_github truenas_admin@10.0.5.16
 ```
 
 ---
@@ -69,7 +69,7 @@ ssh -i /home/soporte/.ssh/id_rsa ubuntu@172.9.30.113
 ## Arquitectura
 
 ```
-HOST (VPS 172.9.30.113)           CONTENEDOR
+HOST (VPS 10.0.5.16)           CONTENEDOR
 ─────────────────────────         ────────────────────────
 SSH (port 22)                     opencode web
 cloudflared (tunnel existente)    → expone :4096
