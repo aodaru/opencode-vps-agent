@@ -2,12 +2,30 @@
 
 ## Estado de la fase
 
-**✅ COMPLETADA** (cierre 2026-07-05)
+**✅ COMPLETADA Y VALIDADA EN VIVO** (cierre 2026-07-05)
 
-El usuario confirmó verbalmente que todos los pasos de los Grupos 1-6 del
-`plan.md` concluyeron con éxito. La verificación formal (correr los
-comandos de "Cómo verificar" en el VPS) queda pendiente como smoke test
-post-merge.
+Todos los criterios se cumplieron y fueron verificados dentro del
+contenedor con el agente operativo:
+
+- `gh auth status`: "Logged in to github.com as aodaru"
+- `gh api user`: respondió 200 con user info
+- `gh repo clone` + `git commit` + `git push` (vía HTTPS credential helper)
+- `gh pr create`: PR #1 en `aodaru/opencode-vps-test`
+- `gh pr merge --merge --delete-branch`: merged OK
+- `ssh -T git@github.com`: "Hi aodaru! You've successfully authenticated" (validado interactivamente por el usuario, ya que mi test no-interactive no podía tipear la passphrase)
+
+### Notas sobre la implementación
+
+- **Issue encontrado**: `gh` no persistía su auth entre rebuilds (la
+  config de `gh` está en `~/.config/gh/`, que no estaba en ningún
+  volumen). **Fix**: agregar `opencode-config:/home/cloud/.config/gh`
+  al `docker-compose.yml` (commit `85e43db`).
+- **Issue encontrado**: editar `.env` después de que el contenedor está
+  corriendo NO aplica los env vars al proceso supervisord. Hay que
+  recrear el contenedor (`up -d --force-recreate`). Documentado en
+  plan.md (commit `15c505a`).
+- **GitHub user real**: `aodaru` (no `adalgarcia` como dice la doc).
+  El blog y nombre en GitHub sí son "adalgarcia.com" / "Adal García".
 
 ---
 
@@ -27,64 +45,63 @@ los siguientes criterios.
 
 ### 1. Configuración de secretos
 
-- [ ] `GH_TOKEN` presente en `.env` (local, no commiteado)
-- [ ] `GH_TOKEN` declarado en `docker-compose.yml` `environment:`
-- [ ] `.env.example` actualizado con placeholder de `GH_TOKEN`
-- [ ] `git status` muestra `.env` como ignored, nunca staged
+- [x] `GH_TOKEN` presente en `.env` (local, no commiteado)
+- [x] `GH_TOKEN` declarado en `docker-compose.yml` `environment:`
+- [x] `.env.example` actualizado con placeholder de `GH_TOKEN`
+- [x] `git status` muestra `.env` como ignored, nunca staged
 
 ### 2. `gh` CLI autenticada
 
-- [ ] `gh --version` responde (binario instalado)
-- [ ] `gh auth status` muestra "Logged in to github.com as adalgarcia"
-- [ ] `gh auth status` lista los scopes correctos (Contents, PRs, etc.)
-- [ ] `gh api user` responde 200 con user info válido
-- [ ] El host de la auth es `github.com` (no GHE u otro)
+- [x] `gh --version` responde (binario instalado)
+- [x] `gh auth status` muestra "Logged in to github.com as aodaru"
+- [x] `gh auth status` lista los scopes correctos (Contents, PRs, etc.)
+- [x] `gh api user` responde 200 con user info válido
+- [x] El host de la auth es `github.com` (no GHE u otro)
 
 ### 3. Git configurado
 
-- [ ] `git config --global --get credential.helper` devuelve `gh`
-- [ ] `git config --global --get user.name` devuelve `adalgarcia`
-- [ ] `git config --global --get user.email` devuelve el email de GitHub
-- [ ] `~/.gitconfig` tiene sección `[credential] helper = "gh"` o `helper = "!gh auth git-credential"`
+- [x] `git config --global --get credential.helper` devuelve `gh`
+- [x] `git config --global --get user.name` devuelve "Adal García"
+- [x] `git config --global --get user.email` devuelve "aodarug@gmail.com"
+- [x] `~/.gitconfig` tiene sección `[credential] helper = "!gh auth git-credential"`
 
 ### 4. SSH key
 
-- [ ] `~/.ssh/id_ed25519_github_opencode` existe (private key)
-- [ ] `~/.ssh/id_ed25519_github_opencode.pub` existe (public key)
-- [ ] Permisos: `700` en `~/.ssh/`, `600` en private, `644` en public
-- [ ] Ownership: `cloud cloud` en todos los archivos de `~/.ssh/`
-- [ ] `~/.ssh/config` tiene el bloque `Host github.com` con la key correcta
-- [ ] La key tiene passphrase (verificable con `ssh-keygen -y -f <key>`)
-- [ ] `ssh -T git@github.com` autentica correctamente:
+- [x] `~/.ssh/id_ed25519_github_opencode` existe (private key)
+- [x] `~/.ssh/id_ed25519_github_opencode.pub` existe (public key)
+- [x] Permisos: `700` en `~/.ssh/`, `600` en private, `644` en public
+- [x] Ownership: `cloud cloud` en todos los archivos de `~/.ssh/`
+- [x] `~/.ssh/config` tiene el bloque `Host github.com` con la key correcta
+- [x] La key tiene passphrase (verificada con `ssh-keygen -y -f <key>`)
+- [x] `ssh -T git@github.com` autentica correctamente (verificado interactivamente):
   ```
-  Hi adalgarcia! You've successfully authenticated, but GitHub does not provide shell access.
+  Hi aodaru! You've successfully authenticated, but GitHub does not provide shell access.
   ```
-- [ ] La key persiste tras `docker compose restart` (volumen `opencode-ssh`)
+- [x] La key persiste tras `docker compose restart` (volumen `opencode-ssh`)
 
 ### 5. Smoke test end-to-end
 
-- [ ] `gh repo clone adalgarcia/opencode-vps-test` funciona
-- [ ] `git checkout -b feature/test-fase4` funciona
-- [ ] `git commit` con la identidad configurada funciona
-- [ ] `git push -u origin feature/test-fase4` funciona vía SSH
-- [ ] `gh pr create` abre un PR real en github.com/adalgarcia/opencode-vps-test
-- [ ] El PR es visible vía web o `gh pr view`
-- [ ] El PR se puede mergear (vía web o `gh pr merge --merge`)
+- [x] `gh repo clone aodaru/opencode-vps-test` funciona
+- [x] `git checkout -b feature/smoke-fase4` funciona
+- [x] `git commit` con la identidad configurada funciona
+- [x] `git push -u origin feature/smoke-fase4` funciona (vía HTTPS credential helper)
+- [x] `gh pr create` abre PR #1 real en github.com/aodaru/opencode-vps-test
+- [x] El PR es visible vía web o `gh pr view`
+- [x] El PR se mergeó con `gh pr merge --merge --delete-branch`
 
 ### 6. Documentación
 
-- [ ] `setup.sh` sección 4 reescrita con el flujo real (PAT, no web flow)
-- [ ] `specs/roadmap.md` marca Fase 4 como ✅
-- [ ] `AGENTS.md` menciona que el flujo GitHub está operativo
-- [ ] `specs/2026-07-05-fase4-github-git/{plan,requirements,validation}.md` commiteados
+- [x] `setup.sh` sección 4 reescrita con el flujo real (PAT, no web flow)
+- [x] `specs/roadmap.md` marca Fase 4 como ✅
+- [x] `AGENTS.md` menciona que el flujo GitHub está operativo
+- [x] `specs/2026-07-05-fase4-github-git/{plan,requirements,validation}.md` commiteados
 
 ### 7. Seguridad
 
-- [ ] `git log --all --full-history -- .env` no muestra el archivo (verificar
-  que nunca se filtró)
-- [ ] `gh auth status` no muestra el token en texto plano
-- [ ] La SSH key no está commiteada en ningún archivo del repo
-- [ ] El PAT tiene solo los scopes mínimos decididos en D4
+- [x] `git log --all --full-history -- .env` no muestra el archivo (verificado)
+- [x] `gh auth status` no muestra el token en texto plano (solo `***`)
+- [x] La SSH key no está commiteada en ningún archivo del repo
+- [x] El PAT tiene solo los scopes mínimos decididos en D4 (Contents, PRs, Metadata)
 
 ## Cómo verificar
 
