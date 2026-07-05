@@ -29,6 +29,13 @@ Marcar checkboxes al ejecutar.
 6. [ ] Verificar que la variable llega al contenedor:
    `docker compose exec opencode-vps env | grep GH_TOKEN`
 
+> ⚠️ **CRÍTICO**: editar `.env` y/o `docker-compose.yml` después de que el
+> contenedor ya está corriendo **NO** aplica los cambios al proceso
+> supervisord (los env vars se setean al `docker run`). Hay que
+> `docker compose restart opencode-vps` (o `up -d --force-recreate`)
+> para que supervisord y sus programas hijos los recojan. Sin este
+> paso, `gh auth login` ve `GH_TOKEN` vacío aunque esté en `.env`.
+
 ## Grupo 2: Autenticación `gh` dentro del contenedor
 
 Entrar al contenedor:
@@ -38,7 +45,7 @@ ssh cloud@ssh.adalgarcia.com
 ```
 
 7. [ ] `gh --version` (sanity check)
-8. [ ] `echo "$GH_TOKEN" | gh auth login --hostname github.com --gitprotocol https --with-token`
+8. [ ] `echo "$GH_TOKEN" | gh auth login --hostname github.com --git-protocol https --with-token`
 9. [ ] Verificar: `gh auth status` → debe mostrar "Logged in to github.com as adalgarcia"
 10. [ ] Verificar scopes concedidos: `gh auth status` (sección "Token scopes")
 11. [ ] Smoke test API: `gh api user` → debe devolver user info en JSON
