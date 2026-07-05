@@ -16,18 +16,40 @@ echo -e "${GREEN}========================================${NC}"
 echo ""
 
 # ============================================================
-# 1. Cambiar contrasenas por defecto
+# 1. Cambiar contrasenas por defecto (REQUERIDO antes de exponer)
 # ============================================================
-echo -e "${YELLOW}[1/4] Cambiando contrasenas por defecto...${NC}"
-echo "Cambia las contrasenas de devadmin y cloud con:"
-echo "  passwd devadmin"
-echo "  passwd cloud"
+echo -e "${YELLOW}[1/5] Cambiar contrasenas por defecto${NC}"
+echo "devadmin y cloud se crean con password 'changeme' (ver Dockerfile:54-59)."
+echo "Cambiar ANTES de cualquier uso serio:"
+echo "  docker compose exec -it opencode-vps passwd devadmin"
+echo "  docker compose exec -it opencode-vps passwd cloud"
+echo ""
+
+# ============================================================
+# 1b. Validar ownership de ~/.ssh (sino ssh-copy-id falla)
+# ============================================================
+echo -e "${YELLOW}[1b/5] Validar ownership de ~/.ssh${NC}"
+echo "El volumen opencode-ssh inicializa /home/cloud/.ssh como root."
+echo "Verificar ownership actual:"
+echo "  docker compose exec opencode-vps stat -c '%U:%G %n' /home/devadmin/.ssh /home/cloud/.ssh"
+echo ""
+echo "Esperado:"
+echo "  devadmin:devadmin /home/devadmin/.ssh"
+echo "  cloud:cloud       /home/cloud/.ssh"
+echo ""
+echo "Si aparece 'root', corregir:"
+echo "  docker compose exec -u root opencode-vps chown -R devadmin:devadmin /home/devadmin/.ssh"
+echo "  docker compose exec -u root opencode-vps chown -R cloud:cloud /home/cloud/.ssh"
+echo ""
+echo "Nota: desde esta version, el contenedor incluye un script que corrige"
+echo "esto automaticamente al arrancar (supervisor > ssh-fix-ownership)."
+echo "El chequeo de arriba es solo validacion manual por si el script falla."
 echo ""
 
 # ============================================================
 # 2. Configurar OpenCode Go (API Key)
 # ============================================================
-echo -e "${YELLOW}[2/4] Configurar OpenCode Go${NC}"
+echo -e "${YELLOW}[2/5] Configurar OpenCode Go${NC}"
 echo "1. Ve a https://opencode.ai/auth"
 echo "2. Inicia sesion y copia tu API key de OpenCode Go"
 echo "3. Ejecuta:"
@@ -40,7 +62,7 @@ echo ""
 # ============================================================
 # 3. Cloudflare Tunnel
 # ============================================================
-echo -e "${YELLOW}[3/4] Configurar Cloudflare Tunnel${NC}"
+echo -e "${YELLOW}[3/5] Configurar Cloudflare Tunnel${NC}"
 echo ""
 echo "a) Autenticar con Cloudflare:"
 echo "   cloudflared tunnel login"
@@ -64,25 +86,26 @@ echo ""
 # ============================================================
 # 4. GitHub CLI
 # ============================================================
-echo -e "${YELLOW}[4/4] Configurar GitHub CLI${NC}"
+echo -e "${YELLOW}[4/5] Configurar GitHub CLI${NC}"
 echo ""
-echo "a) Autenticar:"
-echo "   gh auth login"
-echo "   (Selecciona GitHub.com > HTTPS > Login with a web browser)"
+echo "a) Agregar GH_TOKEN al .env del host (PAT fine-grained de GitHub)"
 echo ""
-echo "b) Configurar git:"
+echo "b) Autenticar (dentro del contenedor como cloud):"
+echo "   echo \"\$GH_TOKEN\" | gh auth login --hostname github.com --gitprotocol https --with-token"
+echo ""
+echo "c) Configurar git:"
 echo "   gh auth setup-git"
 echo ""
-echo "c) Generar SSH key para GitHub (opcional, para repos privados):"
-echo "   ssh-keygen -t ed25519 -C 'opencode-vps-agent'"
-echo "   cat ~/.ssh/id_ed25519.pub"
-echo "   (Anade la llave publica a GitHub > Settings > SSH keys)"
+echo "d) Generar SSH key para git push directo:"
+echo "   ssh-keygen -t ed25519 -C 'opencode-vps-agent' -f ~/.ssh/id_ed25519_github_opencode"
+echo "   cat ~/.ssh/id_ed25519_github_opencode.pub"
+echo "   (Anade la publica a GitHub > Settings > SSH keys)"
 echo ""
 
 # ============================================================
 # 5. Hardening SSH (desde devadmin)
 # ============================================================
-echo -e "${YELLOW}[EXTRA] Hardening SSH (como devadmin)${NC}"
+echo -e "${YELLOW}[5/5] Hardening SSH (como devadmin)${NC}"
 echo ""
 echo "a) Copia tu llave publica al VPS:"
 echo "   ssh-copy-id devadmin@<IP-del-VPS>"
