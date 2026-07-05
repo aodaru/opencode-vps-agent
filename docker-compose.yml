@@ -19,6 +19,8 @@ services:
       - opencode-auth:/home/cloud/.local/share/opencode
       # Configuracion de OpenCode
       - opencode-config:/home/cloud/.config/opencode
+      # Auth de gh CLI (sino se pierde en cada rebuild)
+      - opencode-config:/home/cloud/.config/gh
       # Certificados y config del Cloudflare Tunnel
       - opencode-tunnel:/home/cloud/.cloudflared
       # Proyectos y codigo fuente
