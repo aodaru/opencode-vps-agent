@@ -63,16 +63,39 @@ Fases completadas:
 - Fase 1: Contenedor base
 - Fase 2: Autenticacion OpenCode Go + SSH
 - Fase 3: Cloudflare Tunnel + acceso remoto
+- Fase 4: GitHub + git (gh CLI + SSH key + flujo de PRs)
 
-Pendientes: Fase 4 (Git integration), Fase 5 (operacion continua), Fase 6 (post-MVP).
+Pendientes: Fase 5 (operacion continua), Fase 6 (post-MVP).
 Ver `specs/roadmap.md` para detalles.
 
 ## Seguridad
 
 `.env` esta en `.gitignore`. **Nunca** commitees secretos.
 
-Tras clonar este repo:
+Tras el primer arranque del contenedor:
 
-1. Cambiar las contrasenas por defecto (`devadmin`, `cloud`) dentro del contenedor.
-2. Rotar la API key de OpenCode Go y el token de Cloudflare Tunnel.
-3. Habilitar autenticacion por clave publica en SSH y deshabilitar password auth.
+1. **Cambiar las contrasenas por defecto** de los usuarios del contenedor
+   (el `Dockerfile` crea `devadmin` y `cloud` con `changeme`):
+   ```bash
+   docker compose exec -it opencode-vps passwd devadmin
+   docker compose exec -it opencode-vps passwd cloud
+   ```
+
+2. **Validar ownership de `~/.ssh/`**. El volumen `opencode-ssh` puede
+   inicializar `/home/cloud/.ssh` como `root`, lo que rompe
+   `ssh-copy-id`. El contenedor incluye un script que corrige esto
+   automaticamente al arrancar (`supervisor > ssh-fix-ownership`), pero
+   se puede verificar/corrigir manualmente:
+   ```bash
+   docker compose exec opencode-vps stat -c '%U:%G %n' /home/*/.ssh
+   # Esperado:
+   #   devadmin:devadmin /home/devadmin/.ssh
+   #   cloud:cloud       /home/cloud/.ssh
+   # Si aparece 'root', corregir:
+   docker compose exec -u root opencode-vps chown -R devadmin:devadmin /home/devadmin/.ssh
+   docker compose exec -u root opencode-vps chown -R cloud:cloud /home/cloud/.ssh
+   ```
+
+3. Rotar la API key de OpenCode Go y el token de Cloudflare Tunnel.
+
+4. Habilitar autenticacion por clave publica en SSH y deshabilitar password auth.

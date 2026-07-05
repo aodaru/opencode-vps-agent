@@ -50,14 +50,14 @@ un proyecto. ✅
 
 ## Fase 4: GitHub + git
 
-- [ ] `gh auth login` (flujo headless con código)
-- [ ] `gh auth setup-git`
-- [ ] Generar SSH key: `ssh-keygen -t ed25519`
-- [ ] Agregar llave pública a GitHub
-- [ ] Probar: clonar repo privado + crear PR
+- [x] `gh auth login` (flujo headless con código)
+- [x] `gh auth setup-git`
+- [x] Generar SSH key: `ssh-keygen -t ed25519`
+- [x] Agregar llave pública a GitHub
+- [x] Probar: clonar repo privado + crear PR
 
 **Criterio de éxito:** El agente puede clonar repos privados y crear PRs
-sin intervención manual.
+sin intervención manual. ✅
 
 ---
 
@@ -90,7 +90,7 @@ volúmenes se pueden respaldar.
 | Fase 1: Contenedor base | ✅ Completada |
 | Fase 2: Autenticación | ✅ Completada |
 | Fase 3: Tunnel | ✅ Completada |
-| Fase 4: GitHub | ⬜ Pendiente |
+| Fase 4: GitHub + git | ✅ Completada |
 | Fase 5: Operación | ⬜ Pendiente |
 | Fase 6: Post-MVP | ⬜ Pendiente |
 
@@ -127,3 +127,16 @@ volúmenes se pueden respaldar.
 - Cambiable con `OPENCODE_SERVER_USERNAME` en `.env`
 - Cloudflared dentro del contenedor (no en el host) con token
 - Dashboard de Cloudflare apunta a `http://127.0.0.1:4096` (IPv4, no localhost)
+
+### Cambios realizados en Fase 4 (GitHub + git)
+- `gh` CLI ya estaba instalado desde Fase 2 (Dockerfile)
+- Script `scripts/fix-ssh-ownership.sh`: corrige ownership de `~/.ssh/`
+  al arrancar (vía supervisord), idempotente
+- `supervisor/ssh-fix-ownership.conf`: programa one-shot (`priority=1`)
+  que corre antes que `sshd` (`priority=10`)
+- SSH key del agente: `id_ed25519_github_opencode` (con passphrase +
+  `ssh-agent`)
+- PAT fine-grained en `.env` con scopes mínimos (Contents, Pull requests,
+  Metadata), inyectado al contenedor como `GH_TOKEN`
+- Flujo dual: HTTPS via `gh` (para `gh` subcommands) + SSH (para
+  `git push/pull` directo)
