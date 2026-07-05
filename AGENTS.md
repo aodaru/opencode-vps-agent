@@ -47,7 +47,7 @@ ssh -i ~/.ssh/id_ed25519_github truenas_admin@10.0.5.16
 | Fase 1: Contenedor base | ✅ Completada |
 | Fase 2: Autenticación OpenCode Go | ✅ Completada |
 | Fase 3: Tunnel + acceso remoto | ✅ Completada |
-| Fase 4: GitHub + git | ⬜ Pendiente |
+| Fase 4: GitHub + git | ✅ Completada |
 | Fase 5: Operación continua | ⬜ Pendiente |
 | Fase 6: Post-MVP | ⬜ Pendiente |
 

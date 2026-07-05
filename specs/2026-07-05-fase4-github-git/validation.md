@@ -1,5 +1,16 @@
 # Validación - Fase 4: GitHub + git
 
+## Estado de la fase
+
+**✅ COMPLETADA** (cierre 2026-07-05)
+
+El usuario confirmó verbalmente que todos los pasos de los Grupos 1-6 del
+`plan.md` concluyeron con éxito. La verificación formal (correr los
+comandos de "Cómo verificar" en el VPS) queda pendiente como smoke test
+post-merge.
+
+---
+
 ## Criterios de éxito
 
 La Fase 4 se considera completada y mergeable cuando se cumplan **todos**

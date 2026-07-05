@@ -63,8 +63,9 @@ Fases completadas:
 - Fase 1: Contenedor base
 - Fase 2: Autenticacion OpenCode Go + SSH
 - Fase 3: Cloudflare Tunnel + acceso remoto
+- Fase 4: GitHub + git (gh CLI + SSH key + flujo de PRs)
 
-Pendientes: Fase 4 (Git integration), Fase 5 (operacion continua), Fase 6 (post-MVP).
+Pendientes: Fase 5 (operacion continua), Fase 6 (post-MVP).
 Ver `specs/roadmap.md` para detalles.
 
 ## Seguridad
