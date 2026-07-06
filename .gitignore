@@ -8,3 +8,8 @@
 .env
 .env.*
 !.env.example
+
+# Bind mounts de persistencia del agente.
+# Sobreviven a `docker compose down -v` y se respaldan con
+# `tar -czf backup.tar.gz ./data/`. NO se commitean nunca.
+data/
