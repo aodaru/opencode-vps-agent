@@ -80,13 +80,13 @@ RUN mkdir -p /home/cloud/proyectos \
 # Copiar configuraciones pre-creadas
 COPY config/opencode.json /home/cloud/.config/opencode/opencode.json
 COPY config/cloudflared.yml /home/cloud/.cloudflared/config.yml
-COPY scripts/fix-ssh-ownership.sh /usr/local/bin/fix-ssh-ownership.sh
+COPY scripts/fix-ownership.sh /usr/local/bin/fix-ownership.sh
 COPY supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 COPY supervisor/opencode-web.conf /etc/supervisor/conf.d/opencode-web.conf
 COPY supervisor/sshd.conf /etc/supervisor/conf.d/sshd.conf
-COPY supervisor/ssh-fix-ownership.conf /etc/supervisor/conf.d/ssh-fix-ownership.conf
+COPY supervisor/fix-ownership.conf /etc/supervisor/conf.d/fix-ownership.conf
 
-RUN chmod +x /usr/local/bin/fix-ssh-ownership.sh \
+RUN chmod +x /usr/local/bin/fix-ownership.sh \
     && chown -R cloud:cloud /home/cloud/.config/opencode/opencode.json \
     && chown -R cloud:cloud /home/cloud/.cloudflared/config.yml
 
