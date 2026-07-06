@@ -118,13 +118,13 @@ de los 7 paths consistente, test destructivo pasa, PR mergeado a `main`. ✅
 
 ## Fase 5: Operación continua
 
-- [ ] Healthcheck en docker-compose
-- [ ] Verificar logs: `docker compose logs -f`
-- [ ] Script de backup de volúmenes
-- [ ] `restart: unless-stopped` confirmado
+- [x] Healthcheck en docker-compose (curl cada 30s)
+- [x] Verificar logs: `docker compose logs -f` (Docker captura stdout/stderr)
+- [x] Script de backup: `./scripts/backup-data.sh` (backup con timestamp + rotación)
+- [x] `restart: unless-stopped` confirmado
 
 **Criterio de éxito:** El contenedor sobrevive reinicios del host y los
-volúmenes se pueden respaldar.
+volúmenes se pueden respaldar. ✅
 
 ---
 
@@ -148,7 +148,7 @@ volúmenes se pueden respaldar.
 | Fase 4: GitHub + git | ✅ Completada |
 | Fix: Persistencia bind mounts | ✅ Completada (PR #2 mergeado) |
 | Fix: usuario cloud + workdir proyectos | ✅ Completada (PR #3 mergeado) |
-| Fase 5: Operación | ⬜ Pendiente |
+| Fase 5: Operación | ✅ Completada |
 | Fase 6: Post-MVP | ⬜ Pendiente |
 
 ---

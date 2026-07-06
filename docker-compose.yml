@@ -44,6 +44,12 @@ services:
       # Puerto 22 solo para acceso SSH directo (fallback)
       # Si usas Cloudflare Tunnel exclusivamente, puedes quitar esta linea
       - "2222:22"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4096"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     networks:
       - opencode-net
 

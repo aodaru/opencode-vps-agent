@@ -50,7 +50,7 @@ ssh -i ~/.ssh/id_ed25519_github truenas_admin@10.0.5.16
 | Fase 4: GitHub + git | ✅ Completada |
 | Fix: Persistencia bind mounts | ✅ Completada |
 | Fix: usuario cloud + workdir proyectos | ✅ Completada |
-| Fase 5: Operación continua | ⬜ Pendiente |
+| Fase 5: Operación continua | ✅ Completada |
 | Fase 6: Post-MVP | ⬜ Pendiente |
 
 ## Persistencia en host (`~/opencode-vps/data/`)
