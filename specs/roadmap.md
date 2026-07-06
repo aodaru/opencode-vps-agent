@@ -104,15 +104,15 @@ puede escribir en su propio workspace.
 - [x] **Grupo 4: `setup.sh` actualizado** — sección [1b/5] lista todos los paths
 - [x] **Grupo 5: Documentación** — `AGENTS.md`, `README.md` actualizados
 - [x] **Grupo 6: Spec nueva** — `specs/2026-07-06-fix-usuario-cloud-workdir-proyectos/`
-- [ ] **Grupo 7: Validación en VPS** ⚠️ CRITERIO CLAVE
-  - [ ] PR mergeado a `main`
-  - [ ] `ps -o user` muestra `cloud` para el proceso opencode-web
-  - [ ] `readlink /proc/<pid>/cwd` muestra `/home/cloud/proyectos`
-  - [ ] Ownership correcto en los 7 paths
-  - [ ] Test destructivo (`down -v && up -d`) pasa
+- [x] **Grupo 7: Validación en VPS** ✅
+  - [x] PR #3 mergeado a `main`
+  - [x] `ps -o user` muestra `cloud` para el proceso opencode-web
+  - [x] `readlink /proc/<pid>/cwd` muestra `/home/cloud/proyectos`
+  - [x] Ownership correcto en los 7 paths
+  - [x] Test destructivo (`down -v && up -d`) pasa
 
 **Criterio de éxito:** Proceso corre como `cloud`, cwd correcto, ownership
-de los 7 paths consistente, test destructivo pasa, PR mergeado a `main`.
+de los 7 paths consistente, test destructivo pasa, PR mergeado a `main`. ✅
 
 ---
 
@@ -147,7 +147,7 @@ volúmenes se pueden respaldar.
 | Fase 3: Tunnel | ✅ Completada |
 | Fase 4: GitHub + git | ✅ Completada |
 | Fix: Persistencia bind mounts | ✅ Completada (PR #2 mergeado) |
-| Fix: usuario cloud + workdir proyectos | 🟡 Implementado, pendiente test en VPS + merge |
+| Fix: usuario cloud + workdir proyectos | ✅ Completada (PR #3 mergeado) |
 | Fase 5: Operación | ⬜ Pendiente |
 | Fase 6: Post-MVP | ⬜ Pendiente |
 
@@ -178,6 +178,8 @@ volúmenes se pueden respaldar.
 - Cloudflared usa `%(ENV_CLOUDFLARE_TUNNEL_TOKEN)s` desde variable de entorno
 - Protocolo HTTP/2 forzado (`--protocol http2`) para evitar problemas QUIC en Docker
 - `xdg-open` dummy creado para evitar crash de opencode web
+- `HOME="/home/cloud"` en environment de opencode-web (supervisord no setea HOME
+  automáticamente al usar `user=cloud`, causaba `EACCES` al escribir en `/root/`)
 
 ### Notas importantes
 - Username por defecto para HTTP Basic Auth: `opencode`
@@ -186,11 +188,8 @@ volúmenes se pueden respaldar.
 - Dashboard de Cloudflare apunta a `http://127.0.0.1:4096` (IPv4, no localhost)
 
 ### Cambios realizados en Fase 4 (GitHub + git)
-- `gh` CLI ya estaba instalado desde Fase 2 (Dockerfile)
-- Script `scripts/fix-ssh-ownership.sh`: corrige ownership de `~/.ssh/`
-  al arrancar (vía supervisord), idempotente
-- `supervisor/ssh-fix-ownership.conf`: programa one-shot (`priority=1`)
-  que corre antes que `sshd` (`priority=10`)
+- `gh` CLI instalado en Dockerfile
+- `fix-ownership.sh` reemplaza al viejo `fix-ssh-ownership.sh`
 - SSH key del agente: `id_ed25519_github_opencode` (con passphrase +
   `ssh-agent`)
 - PAT fine-grained en `.env` con scopes mínimos (Contents, Pull requests,
@@ -198,50 +197,8 @@ volúmenes se pueden respaldar.
 - Flujo dual: HTTPS via `gh` (para `gh` subcommands) + SSH (para
   `git push/pull` directo)
 
-### Cambios en fix/persistencia-bind-mounts
-
-**Implementación (commiteada en `fix/persistencia-bind-mounts`):**
-- Migración de named volumes a bind mounts en `./data/` (host filesystem)
-- **Bug corregido**: `opencode-config` se usaba para dos paths distintos
-  (`~/.config/opencode` y `~/.config/gh`), corrompiendo ambas configs
-- Persistencia agregada para `/home/devadmin/.ssh` (antes no persistía)
-- Rename: `OPENCODE_GO_API_KEY` → `OPENCODE_API_KEY` (nombre que
-  opencode-go espera según models.dev)
-- `auth.json` (creado por `opencode auth login`) es ahora la fuente
-  principal de auth; la env var queda como backup opcional
-- Scripts nuevos: `init-data.sh` (bootstrap idempotente) +
-  `migrate-volumes.sh` (one-shot, migra named volumes a `./data/`)
-- `data/` agregado a `.gitignore` (nunca se commitea)
-- `docker-compose.yml`: 7 bind mounts, sección `volumes:` final eliminada
-- Documentación actualizada: `AGENTS.md` (sección "Persistencia en host"
-  con tabla), `README.md` (sección "Persistencia"), `specs/tech-stack.md`
-  (tabla "Directorios persistentes" con bind mounts)
-- `setup.sh` sección [2/5] reescrita con flujo `auth.json` + env var backup
-- `supervisor/opencode-web.conf` actualizado con la env var renombrada
+### Cambios en fix/persistencia-bind-mounts (completado)
+- Migración de named volumes a bind mounts en `./data/`
+- Bug corregido: `opencode-config` se usaba para dos paths distintos
+- Scripts: `init-data.sh` (bootstrap) + `migrate-volumes.sh` (one-shot)
 - Ver spec: `specs/2026-07-05-fix-persistencia-bind-mounts/`
-
-**Próximos pasos (pendientes):**
-1. **Ejecutar test destructivo en el VPS** (`~/opencode-vps/`):
-   - Pull de la rama (con los 4 commits sin pushear)
-   - `./scripts/init-data.sh && ./scripts/migrate-volumes.sh` (si no se ha hecho)
-   - `docker compose up -d` y verificar auth + modelos
-   - **`docker compose down -v && docker compose up -d`** ← el criterio clave
-   - Verificar que `auth.json`, SSH keys, `gh auth status` y modelos
-     sobreviven **sin re-autenticar**
-2. **Push del branch:**
-   ```bash
-   git push -u origin fix/persistencia-bind-mounts
-   ```
-3. **Abrir PR:**
-   ```bash
-   gh pr create --base main \
-     --title "fix(persistencia): migrar a bind mounts en host" \
-     --body-file specs/2026-07-05-fix-persistencia-bind-mounts/validation.md
-   ```
-4. **Merge y cleanup:**
-   ```bash
-   gh pr merge --merge --delete-branch
-   git checkout main && git pull
-   ```
-5. **Marcar Fix como ✅ en este roadmap** y agregar entrada a
-   "Cambios realizados" si conviene

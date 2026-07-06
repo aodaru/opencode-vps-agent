@@ -215,3 +215,172 @@ Marcar checkboxes al ejecutar.
 45. [ ] Validar criterios de merge (ver `validation.md`)
 46. [ ] `gh pr merge --merge --delete-branch`
 47. [ ] Cleanup local: `git checkout main && git pull`
+
+---
+
+## Pendiente: ejecución en próxima sesión desde truenas
+
+> ⚠️ El PR #3 ya está abierto y mergeado a `main` quedaría pendiente de
+> esta validación. La rama `fix/usuario-cloud-workdir` ya está pusheada
+> a `origin`. **Falta ejecutar los pasos de Grupo 8 + Grupo 9** en el
+> VPS `10.0.5.16` (TrueNAS) para validar el fix end-to-end antes de
+> mergear.
+
+### Información de conexión
+
+| Parámetro | Valor |
+|-----------|-------|
+| Host | `10.0.5.16` (TrueNAS) |
+| Usuario | `truenas_admin` |
+| SSH key | `~/.ssh/id_ed25519_github` |
+| Working dir en VPS | `~/opencode-vps/` |
+| Branch a validar | `fix/usuario-cloud-workdir` |
+| PR abierto | https://github.com/aodaru/opencode-vps-agent/pull/3 |
+
+### SSH al VPS (desde la sesión del agente)
+
+> **El agente puede ejecutar estos pasos directamente vía SSH a truenas**
+> en la próxima sesión. No requiere que el usuario intervenga en cada
+> paso, salvo si la validación falla y hay que decidir cómo proceder.
+
+```bash
+# 1. Conectarse al VPS
+ssh -i ~/.ssh/id_ed25519_github truenas_admin@10.0.5.16
+
+# 2. Una vez dentro, ir al directorio del proyecto
+cd ~/opencode-vps
+
+# 3. Verificar que estamos en main (pre-validación)
+git status
+git log --oneline -3
+```
+
+### Pasos de validación (Grupo 8, ejecutables en orden)
+
+```bash
+# A. Setup: bajar la rama y rearrancar el contenedor
+git fetch origin
+git checkout fix/usuario-cloud-workdir
+git pull
+docker compose up -d --build
+sleep 10  # esperar a que opencode-web arranque
+
+# B. Criterio clave #1: proceso y cwd
+docker compose exec opencode-vps bash -c '
+  PID=$(pgrep -f "opencode web")
+  echo "PID: $PID"
+  echo "=== Proceso opencode-web ==="
+  ps -o user,pid,cmd -p $PID
+  echo "=== Working directory ==="
+  readlink /proc/$PID/cwd
+'
+# Esperado:
+#   USER   cloud
+#   cwd    /home/cloud/proyectos
+
+# C. Criterio clave #2: ownership de los 7 paths
+docker compose exec opencode-vps bash -c '
+  for d in /home/cloud/proyectos \
+           /home/cloud/.config/opencode \
+           /home/cloud/.config/gh \
+           /home/cloud/.local/share/opencode \
+           /home/cloud/.cloudflared \
+           /home/cloud/.ssh \
+           /home/devadmin/.ssh; do
+    stat -c "%U:%G %n" "$d"
+  done
+'
+# Esperado:
+#   cloud:cloud       /home/cloud/proyectos
+#   cloud:cloud       /home/cloud/.config/opencode
+#   cloud:cloud       /home/cloud/.config/gh
+#   cloud:cloud       /home/cloud/.local/share/opencode
+#   cloud:cloud       /home/cloud/.cloudflared
+#   cloud:cloud       /home/cloud/.ssh
+#   devadmin:devadmin /home/devadmin/.ssh
+
+# D. Criterio clave #3: escritura funciona como cloud
+docker compose exec -u cloud opencode-vps touch /home/cloud/proyectos/.smoke-test
+docker compose exec opencode-vps stat -c '%U:%G %n' /home/cloud/proyectos/.smoke-test
+# Esperado: cloud:cloud /home/cloud/proyectos/.smoke-test
+docker compose exec opencode-vps rm /home/cloud/proyectos/.smoke-test
+
+# E. Criterio clave #4: web UI + auth sin re-login
+curl -u opencode:"$OPENCODE_SERVER_PASSWORD" -s -o /dev/null \
+  -w "HTTP: %{http_code}\n" http://localhost:4096
+# Esperado: HTTP: 200 (o 401)
+
+docker compose exec -u cloud opencode-vps opencode models opencode-go | head -3
+# Esperado: 3 modelos Go (glm-5.2, qwen3.7-max, kimi-k2.7-code)
+
+docker compose exec -u cloud opencode-vps gh auth status | head -3
+# Esperado: Logged in to github.com as aodaru
+
+# F. Servicios auxiliares siguen corriendo
+docker compose exec opencode-vps pgrep -l cloudflared
+docker compose exec opencode-vps pgrep -l sshd
+```
+
+### Test destructivo (criterio clave de aceptación)
+
+```bash
+# Bajar y volver a levantar (esto borra named volumes, NO los bind mounts)
+cd ~/opencode-vps
+docker compose down -v
+docker compose up -d
+sleep 10
+
+# Repetir los pasos B-F completos. Si todo sigue OK, el fix es válido.
+```
+
+### Si todo OK → merge (Grupo 9)
+
+```bash
+# 1. Validar secretos no commiteados
+cd ~/opencode-vps
+git status
+# No debe haber .env ni data/ en el staging
+git diff main...HEAD -- .env  # debe estar vacío
+git ls-files | grep ^data/    # debe estar vacío
+
+# 2. Marcar los checkboxes en este archivo
+# (editar specs/2026-07-06-fix-usuario-cloud-workdir-proyectos/validation.md)
+
+# 3. Commitear los checks marcados
+git add specs/2026-07-06-fix-usuario-cloud-workdir-proyectos/
+git commit -m "docs: marcar checks de validacion como completados"
+
+# 4. Merge del PR
+gh pr merge 3 --merge --delete-branch
+
+# 5. Cleanup
+git checkout main
+git pull
+git branch -d fix/usuario-cloud-workdir 2>/dev/null || true
+git remote prune origin
+
+# 6. Actualizar roadmap y AGENTS.md (marcar fix como ✅)
+```
+
+### Si algo falla → troubleshooting
+
+| Síntoma | Posible causa | Acción |
+|---------|--------------|--------|
+| `ps` muestra `root` como user | El `user=cloud` no se aplicó (revisar `supervisor/opencode-web.conf`) | Verificar que el commit está en la rama, re-aplicar con `git pull` |
+| `cwd` no es `/home/cloud/proyectos` | El `directory=` se borró o cambió | Restaurar desde git |
+| `stat` muestra owner incorrecto en algún path | El `fix-ownership.sh` no corrió o falló | Ver logs: `docker compose logs opencode-vps \| grep fix-ownership` |
+| `Permission denied` en `touch` | Ownership no se corrigió | Re-ejecutar manualmente: `docker compose exec -u root opencode-vps chown -R cloud:cloud /home/cloud/proyectos` |
+| Web UI no responde | El proceso no arrancó o el puerto está mal | `docker compose logs -f` para ver errores de supervisord |
+| `gh auth` dice "not logged in" | El bind mount `gh-config` está vacío (no se migró en su día) | Re-autenticar manualmente (es esperado si nunca se hizo `gh auth login`) |
+| `docker compose down -v` pierde auth | El bind mount de `opencode-auth` está vacío | Re-autenticar con `opencode auth login --provider opencode-go` |
+
+### Notas para la próxima sesión
+
+- El contenedor tiene `restart: unless-stopped`, así que va a estar
+  corriendo entre sesiones.
+- Si el fix funciona, el próximo paso natural es **Fase 5: Operación
+  continua** (healthcheck + script de backup de `./data/`).
+- Hay un branch stale local `fase2-autenticacion-opencode-go` que se
+  puede borrar en algún momento (no es bloqueante).
+- Hay un branch remoto `master` que aparece en `git branch -a` pero no
+  existe en el repo remoto. Se puede ignorar.

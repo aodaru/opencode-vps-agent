@@ -1,5 +1,25 @@
 # Validación - Fix: usuario `cloud` + workdir `/home/cloud/proyectos`
 
+> ⚠️ **PENDIENTE DE EJECUCIÓN** en próxima sesión.
+>
+> El PR #3 está abierto en
+> https://github.com/aodaru/opencode-vps-agent/pull/3 y la rama
+> `fix/usuario-cloud-workdir` ya está pusheada. **Falta ejecutar los
+> checks de este archivo en el VPS `10.0.5.16` (TrueNAS)** y mergear
+> el PR si todo pasa.
+>
+> **El agente puede ejecutar estos pasos directamente vía SSH a truenas**
+> en la próxima sesión. Conexión:
+>
+> ```bash
+> ssh -i ~/.ssh/id_ed25519_github truenas_admin@10.0.5.16
+> cd ~/opencode-vps
+> ```
+>
+> Los pasos exactos están en `plan.md` → sección
+> **"Pendiente: ejecución en próxima sesión desde truenas"** (Grupo 8 +
+> test destructivo + Grupo 9 merge).
+
 ## Criterios de éxito
 
 La fase se considera completada y mergeable cuando se cumplan **todos**
