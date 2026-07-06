@@ -11,7 +11,7 @@ local se duerma, pierda conexion o se apague.
 - Web UI servida en el puerto 4096
 - Acceso remoto seguro via Cloudflare Tunnel (sin abrir puertos)
 - Fallback SSH en el puerto 2222
-- Persistencia de auth, config, proyectos y SSH keys en volumenes Docker
+- Persistencia de auth, config, proyectos y SSH keys en **bind mounts a `./data/`** (host filesystem)
 - Hardening base: UFW, fail2ban, SSH sin root, sudo no password
 - Supervisord gestiona OpenCode Web, cloudflared y sshd
 
@@ -27,7 +27,7 @@ local se duerma, pierda conexion o se apague.
 - VPS con Docker + Docker Compose
 - Dominio delegado a Cloudflare
 - Tunnel creado en Cloudflare (token en `CLOUDFLARE_TUNNEL_TOKEN`)
-- API key de OpenCode Go (en `OPENCODE_GO_API_KEY`)
+- API key de OpenCode Go (en `OPENCODE_API_KEY`)
 
 ## Uso rapido
 
@@ -64,9 +64,43 @@ Fases completadas:
 - Fase 2: Autenticacion OpenCode Go + SSH
 - Fase 3: Cloudflare Tunnel + acceso remoto
 - Fase 4: GitHub + git (gh CLI + SSH key + flujo de PRs)
+- Fix: Persistencia bind mounts (migracion a `./data/` en host)
 
 Pendientes: Fase 5 (operacion continua), Fase 6 (post-MVP).
 Ver `specs/roadmap.md` para detalles.
+
+## Persistencia
+
+Toda la data del agente persiste en **bind mounts a `./data/`** en el
+host (no en named volumes de Docker). Esto garantiza que sobrevive a
+`docker compose down -v` y es respaldable con `tar`.
+
+```bash
+# Bootstrap (primera vez)
+./scripts/init-data.sh
+
+# Migracion desde named volumes (una sola vez)
+./scripts/migrate-volumes.sh
+
+# Backup
+tar -czf backup-$(date +%F).tar.gz ./data/
+```
+
+Estructura de `./data/`:
+
+| Subdir | Contenido |
+|--------|-----------|
+| `opencode-auth/` | `auth.json` (opencode-go API key) |
+| `opencode-config/` | `opencode.json` (config editable) |
+| `gh-config/` | `hosts.yml` (gh CLI auth) |
+| `cloudflared/` | Credenciales del tunnel |
+| `ssh-cloud/` | SSH keys + `known_hosts` de `cloud` |
+| `ssh-devadmin/` | SSH keys de `devadmin` |
+| `proyectos/` | Workspace del agente |
+
+> **Bug corregido**: antes el named volume `opencode-config` se montaba
+> en dos paths distintos (`~/.config/opencode` y `~/.config/gh`),
+> corrompiendo ambas configs. Ahora cada path tiene su propio bind mount.
 
 ## Seguridad
 

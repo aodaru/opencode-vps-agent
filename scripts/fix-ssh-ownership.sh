@@ -4,8 +4,11 @@
 # Ensure ~/.ssh ownership is correct for devadmin and cloud
 # Runs once on container start as root (via supervisord)
 # Idempotent: safe to re-run
+#
+# NOTA: no usamos `set -e` porque las condicionales del final
+# (`[ -f X ] && chmod X`) devuelven 1 cuando el archivo no
+# existe, lo cual mata el script con set -e.
 # ============================================================
-set -e
 
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -57,6 +60,7 @@ fix_user_ssh() {
     [ -f "$ssh_dir/authorized_keys" ] && chmod 600 "$ssh_dir/authorized_keys"
     [ -f "$ssh_dir/known_hosts" ]     && chmod 644 "$ssh_dir/known_hosts"
     [ -f "$ssh_dir/config" ]          && chmod 600 "$ssh_dir/config"
+    return 0
 }
 
 log "Starting SSH ownership fix"

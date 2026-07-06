@@ -37,12 +37,12 @@ del host apuntando a `http://127.0.0.1:4096`.
 
 ### Docker Compose
 
-Un solo servicio con volúmenes nombrados para persistencia:
+Un solo servicio con **bind mounts a `./data/`** en el host para
+persistencia. Esto reemplaza los named volumes (que se borraban con
+`docker compose down -v` y no eran respaldables directamente).
 
-- `opencode-auth` → API keys y sesiones
-- `opencode-config` → configuración de OpenCode
-- `opencode-proyectos` → código fuente
-- `opencode-ssh` → llaves SSH para GitHub
+> Ver spec `specs/2026-07-05-fix-persistencia-bind-mounts/` para el
+> detalle del refactor.
 
 ## Variables de entorno
 
@@ -50,12 +50,25 @@ Un solo servicio con volúmenes nombrados para persistencia:
 |----------|-----------|
 | `OPENCODE_SERVER_PASSWORD` | Autenticación web (HTTP Basic Auth) |
 | `OPENCODE_CONFIG` | Ruta al archivo de configuración |
+| `OPENCODE_API_KEY` | API key de OpenCode Go (provider). Renombrada de `OPENCODE_GO_API_KEY` (el nombre original no coincidía con el que opencode-go busca según models.dev) |
+| `CLOUDFLARE_TUNNEL_TOKEN` | Token del tunnel de Cloudflare |
+| `GH_TOKEN` | PAT de GitHub para `gh auth login` |
 
 ## Directorios persistentes
 
-| Volumen | Ruta en contenedor | Contenido |
-|---------|-------------------|-----------|
-| `opencode-auth` | `/home/cloud/.local/share/opencode/` | API keys, sesiones |
-| `opencode-config` | `/home/cloud/.config/opencode/` | opencode.json |
-| `opencode-proyectos` | `/home/cloud/proyectos/` | Código fuente |
-| `opencode-ssh` | `/home/cloud/.ssh/` | Llaves SSH para GitHub |
+Bind mounts a `./data/` en el host (no son named volumes):
+
+| Subdir en `./data/` | Ruta en contenedor | Contenido |
+|---------------------|-------------------|-----------|
+| `opencode-auth/` | `/home/cloud/.local/share/opencode/` | `auth.json` (opencode-go API key) |
+| `opencode-config/` | `/home/cloud/.config/opencode/` | `opencode.json` (editable) |
+| `gh-config/` | `/home/cloud/.config/gh/` | `hosts.yml` (gh CLI auth) |
+| `cloudflared/` | `/home/cloud/.cloudflared/` | Credenciales del tunnel |
+| `ssh-cloud/` | `/home/cloud/.ssh/` | SSH keys + `known_hosts` de cloud |
+| `ssh-devadmin/` | `/home/devadmin/.ssh/` | SSH keys de devadmin |
+| `proyectos/` | `/home/cloud/proyectos/` | Workspace del agente |
+
+> **Nota sobre el bug corregido**: antes de este fix, el named volume
+> `opencode-config` se montaba en dos paths distintos (`~/.config/opencode`
+> y `~/.config/gh`), corrompiendo ambas configs. Ahora cada path tiene su
+> propio bind mount.
