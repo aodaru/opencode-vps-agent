@@ -62,6 +62,39 @@ sin intervención manual. ✅
 
 ---
 
+## Fix: Persistencia bind mounts
+
+- [x] **Grupo 1: Scripts de bootstrap**
+  - [x] `scripts/init-data.sh` (idempotente, crea los 7 subdirs + siembra `opencode.json`)
+  - [x] `scripts/migrate-volumes.sh` (one-shot, migra named volumes + inspecciona bug)
+  - [x] Idempotencia validada
+- [x] **Grupo 2: Refactor `docker-compose.yml`**
+  - [x] 7 bind mounts a `./data/...` (sin sección `volumes:` final)
+  - [x] Rename `OPENCODE_GO_API_KEY` → `OPENCODE_API_KEY` en `environment:`
+  - [x] `docker compose config` sin errores
+- [x] **Grupo 3: Rename de env var** (`.env`, `.env.example`, `supervisor/opencode-web.conf`)
+- [x] **Grupo 4: `.gitignore`** — agregado `data/`
+- [x] **Grupo 5: `setup.sh`** — sección [2/5] reescrita (auth.json + env var opcional)
+- [x] **Grupo 6: Documentación** — `AGENTS.md`, `README.md`, `specs/tech-stack.md` actualizados
+- [ ] **Grupo 7: Validación destructiva end-to-end** ⚠️ CRITERIO CLAVE
+  - [ ] `docker compose down -v && up -d` ejecutado en VPS
+  - [ ] Persistencia verificada sin re-autenticar (modelos Go, `gh auth status`, SSH)
+- [ ] **Grupo 8: Merge**
+  - [ ] 4 commits pusheados a `origin/fix/persistencia-bind-mounts`
+  - [ ] PR abierto via `gh pr create --body-file validation.md`
+  - [ ] `gh pr merge --merge --delete-branch`
+  - [ ] Cleanup local: `git checkout main && git pull`
+
+**Estado del branch:**
+- Branch: `fix/persistencia-bind-mounts`
+- Commits ahead of `main`: 5
+- Commits ahead of `origin/fix/persistencia-bind-mounts`: 4 (sin pushear)
+- PR: ninguno abierto
+
+**Criterio de éxito:** Test destructivo pasa + PR mergeado a `main`. ⏳
+
+---
+
 ## Fase 5: Operación continua
 
 - [ ] Healthcheck en docker-compose
@@ -92,7 +125,7 @@ volúmenes se pueden respaldar.
 | Fase 2: Autenticación | ✅ Completada |
 | Fase 3: Tunnel | ✅ Completada |
 | Fase 4: GitHub + git | ✅ Completada |
-| Fix: Persistencia bind mounts | ✅ Completada |
+| Fix: Persistencia bind mounts | 🟡 Implementado, pendiente test destructivo + merge |
 | Fase 5: Operación | ⬜ Pendiente |
 | Fase 6: Post-MVP | ⬜ Pendiente |
 
@@ -144,6 +177,8 @@ volúmenes se pueden respaldar.
   `git push/pull` directo)
 
 ### Cambios en fix/persistencia-bind-mounts
+
+**Implementación (commiteada en `fix/persistencia-bind-mounts`):**
 - Migración de named volumes a bind mounts en `./data/` (host filesystem)
 - **Bug corregido**: `opencode-config` se usaba para dos paths distintos
   (`~/.config/opencode` y `~/.config/gh`), corrompiendo ambas configs
@@ -154,4 +189,37 @@ volúmenes se pueden respaldar.
   principal de auth; la env var queda como backup opcional
 - Scripts nuevos: `init-data.sh` (bootstrap idempotente) +
   `migrate-volumes.sh` (one-shot, migra named volumes a `./data/`)
+- `data/` agregado a `.gitignore` (nunca se commitea)
+- `docker-compose.yml`: 7 bind mounts, sección `volumes:` final eliminada
+- Documentación actualizada: `AGENTS.md` (sección "Persistencia en host"
+  con tabla), `README.md` (sección "Persistencia"), `specs/tech-stack.md`
+  (tabla "Directorios persistentes" con bind mounts)
+- `setup.sh` sección [2/5] reescrita con flujo `auth.json` + env var backup
+- `supervisor/opencode-web.conf` actualizado con la env var renombrada
 - Ver spec: `specs/2026-07-05-fix-persistencia-bind-mounts/`
+
+**Próximos pasos (pendientes):**
+1. **Ejecutar test destructivo en el VPS** (`~/opencode-vps/`):
+   - Pull de la rama (con los 4 commits sin pushear)
+   - `./scripts/init-data.sh && ./scripts/migrate-volumes.sh` (si no se ha hecho)
+   - `docker compose up -d` y verificar auth + modelos
+   - **`docker compose down -v && docker compose up -d`** ← el criterio clave
+   - Verificar que `auth.json`, SSH keys, `gh auth status` y modelos
+     sobreviven **sin re-autenticar**
+2. **Push del branch:**
+   ```bash
+   git push -u origin fix/persistencia-bind-mounts
+   ```
+3. **Abrir PR:**
+   ```bash
+   gh pr create --base main \
+     --title "fix(persistencia): migrar a bind mounts en host" \
+     --body-file specs/2026-07-05-fix-persistencia-bind-mounts/validation.md
+   ```
+4. **Merge y cleanup:**
+   ```bash
+   gh pr merge --merge --delete-branch
+   git checkout main && git pull
+   ```
+5. **Marcar Fix como ✅ en este roadmap** y agregar entrada a
+   "Cambios realizados" si conviene
