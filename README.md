@@ -115,21 +115,54 @@ Tras el primer arranque del contenedor:
    docker compose exec -it opencode-vps passwd cloud
    ```
 
-2. **Validar ownership de `~/.ssh/`**. El volumen `opencode-ssh` puede
-   inicializar `/home/cloud/.ssh` como `root`, lo que rompe
-   `ssh-copy-id`. El contenedor incluye un script que corrige esto
-   automaticamente al arrancar (`supervisor > ssh-fix-ownership`), pero
-   se puede verificar/corrigir manualmente:
+2. **Validar ownership de los bind mounts**. Los bind mounts desde
+   `./data/` se crean con la UID del usuario del host (ej:
+   `truenas_admin`), que no coincide con la UID de `cloud` adentro
+   del contenedor. Esto puede romper la escritura de `opencode web` y
+   la lectura de `auth.json`. El contenedor incluye
+   `fix-ownership.sh` que corrige esto al arrancar
+   (`supervisor > fix-ownership`, `priority=1`), pero se puede
+   verificar/corrigir manualmente:
    ```bash
-   docker compose exec opencode-vps stat -c '%U:%G %n' /home/*/.ssh
+   docker compose exec opencode-vps bash -c '
+     for d in /home/cloud/proyectos \
+              /home/cloud/.config/opencode \
+              /home/cloud/.config/gh \
+              /home/cloud/.local/share/opencode \
+              /home/cloud/.cloudflared \
+              /home/cloud/.ssh \
+              /home/devadmin/.ssh; do
+       stat -c "%U:%G %n" "$d"
+     done
+   '
    # Esperado:
-   #   devadmin:devadmin /home/devadmin/.ssh
+   #   cloud:cloud       /home/cloud/proyectos
+   #   cloud:cloud       /home/cloud/.config/opencode
+   #   cloud:cloud       /home/cloud/.config/gh
+   #   cloud:cloud       /home/cloud/.local/share/opencode
+   #   cloud:cloud       /home/cloud/.cloudflared
    #   cloud:cloud       /home/cloud/.ssh
-   # Si aparece 'root', corregir:
+   #   devadmin:devadmin /home/devadmin/.ssh
+   # Si algo aparece con owner distinto:
+   docker compose exec -u root opencode-vps chown -R cloud:cloud /home/cloud/
    docker compose exec -u root opencode-vps chown -R devadmin:devadmin /home/devadmin/.ssh
-   docker compose exec -u root opencode-vps chown -R cloud:cloud /home/cloud/.ssh
    ```
 
-3. Rotar la API key de OpenCode Go y el token de Cloudflare Tunnel.
+3. **Confirmar que `opencode-web` corre como `cloud`**. Es el
+   usuario correcto (no root). Esto es importante porque cualquier
+   archivo creado en `/home/cloud/proyectos/` debe ser de `cloud`,
+   no de root:
+   ```bash
+   docker compose exec opencode-vps bash -c '
+     PID=$(pgrep -f "opencode web")
+     ps -o user,pid,cmd -p $PID
+     readlink /proc/$PID/cwd
+   '
+   # Esperado:
+   #   cloud  ...  /usr/local/bin/opencode web ...
+   #   /home/cloud/proyectos
+   ```
 
-4. Habilitar autenticacion por clave publica en SSH y deshabilitar password auth.
+4. Rotar la API key de OpenCode Go y el token de Cloudflare Tunnel.
+
+5. Habilitar autenticacion por clave publica en SSH y deshabilitar password auth.

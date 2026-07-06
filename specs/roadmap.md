@@ -76,22 +76,43 @@ sin intervención manual. ✅
 - [x] **Grupo 4: `.gitignore`** — agregado `data/`
 - [x] **Grupo 5: `setup.sh`** — sección [2/5] reescrita (auth.json + env var opcional)
 - [x] **Grupo 6: Documentación** — `AGENTS.md`, `README.md`, `specs/tech-stack.md` actualizados
-- [ ] **Grupo 7: Validación destructiva end-to-end** ⚠️ CRITERIO CLAVE
-  - [ ] `docker compose down -v && up -d` ejecutado en VPS
-  - [ ] Persistencia verificada sin re-autenticar (modelos Go, `gh auth status`, SSH)
-- [ ] **Grupo 8: Merge**
-  - [ ] 4 commits pusheados a `origin/fix/persistencia-bind-mounts`
-  - [ ] PR abierto via `gh pr create --body-file validation.md`
-  - [ ] `gh pr merge --merge --delete-branch`
-  - [ ] Cleanup local: `git checkout main && git pull`
+- [x] **Grupo 7: Validación destructiva end-to-end** ✅
+  - [x] PR #2 mergeado a `main` via `gh pr merge --merge --delete-branch`
+- [x] **Grupo 8: Merge** ✅
+  - [x] Branch `fix/persistencia-bind-mounts` pusheado y mergeado
+  - [x] Cleanup local hecho
 
-**Estado del branch:**
-- Branch: `fix/persistencia-bind-mounts`
-- Commits ahead of `main`: 5
-- Commits ahead of `origin/fix/persistencia-bind-mounts`: 4 (sin pushear)
-- PR: ninguno abierto
+**Criterio de éxito:** Test destructivo pasa + PR mergeado a `main`. ✅
 
-**Criterio de éxito:** Test destructivo pasa + PR mergeado a `main`. ⏳
+---
+
+## Fix: usuario cloud + workdir proyectos
+
+`opencode-web` corre como `root` en lugar de `cloud`, y los bind
+mounts desde `./data/` (creados con la UID del host) no coinciden
+con la UID de `cloud` adentro del contenedor, por lo que `cloud` no
+puede escribir en su propio workspace.
+
+- [x] **Grupo 1: `user=cloud` en supervisor**
+  - [x] `supervisor/opencode-web.conf` con `user=cloud`
+  - [x] `directory=/home/cloud/proyectos` (sin cambios)
+- [x] **Grupo 2: Extender `fix-ownership.sh`**
+  - [x] `scripts/fix-ownership.sh` reemplaza al viejo `fix-ssh-ownership.sh`
+  - [x] Cubre los 7 paths bind-mountados (proyectos, configs, auth, cloudflared, ssh)
+  - [x] `supervisor/fix-ownership.conf` reemplaza a `ssh-fix-ownership.conf`
+- [x] **Grupo 3: Dockerfile actualizado** (COPY del nuevo script + conf)
+- [x] **Grupo 4: `setup.sh` actualizado** — sección [1b/5] lista todos los paths
+- [x] **Grupo 5: Documentación** — `AGENTS.md`, `README.md` actualizados
+- [x] **Grupo 6: Spec nueva** — `specs/2026-07-06-fix-usuario-cloud-workdir-proyectos/`
+- [ ] **Grupo 7: Validación en VPS** ⚠️ CRITERIO CLAVE
+  - [ ] PR mergeado a `main`
+  - [ ] `ps -o user` muestra `cloud` para el proceso opencode-web
+  - [ ] `readlink /proc/<pid>/cwd` muestra `/home/cloud/proyectos`
+  - [ ] Ownership correcto en los 7 paths
+  - [ ] Test destructivo (`down -v && up -d`) pasa
+
+**Criterio de éxito:** Proceso corre como `cloud`, cwd correcto, ownership
+de los 7 paths consistente, test destructivo pasa, PR mergeado a `main`.
 
 ---
 
@@ -125,7 +146,8 @@ volúmenes se pueden respaldar.
 | Fase 2: Autenticación | ✅ Completada |
 | Fase 3: Tunnel | ✅ Completada |
 | Fase 4: GitHub + git | ✅ Completada |
-| Fix: Persistencia bind mounts | 🟡 Implementado, pendiente test destructivo + merge |
+| Fix: Persistencia bind mounts | ✅ Completada (PR #2 mergeado) |
+| Fix: usuario cloud + workdir proyectos | 🟡 Implementado, pendiente test en VPS + merge |
 | Fase 5: Operación | ⬜ Pendiente |
 | Fase 6: Post-MVP | ⬜ Pendiente |
 

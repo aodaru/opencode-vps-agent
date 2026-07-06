@@ -49,6 +49,7 @@ ssh -i ~/.ssh/id_ed25519_github truenas_admin@10.0.5.16
 | Fase 3: Tunnel + acceso remoto | ✅ Completada |
 | Fase 4: GitHub + git | ✅ Completada |
 | Fix: Persistencia bind mounts | ✅ Completada |
+| Fix: usuario cloud + workdir proyectos | ✅ Completada |
 | Fase 5: Operación continua | ⬜ Pendiente |
 | Fase 6: Post-MVP | ⬜ Pendiente |
 
@@ -70,6 +71,32 @@ host, no en named volumes de Docker. Esto garantiza que **sobrevive a
 
 Bootstrap: `./scripts/init-data.sh` (idempotente). Migración desde
 named volumes antiguos: `./scripts/migrate-volumes.sh` (one-shot).
+
+### Usuario y workdir del agente
+
+El servicio `opencode-web` (gestionado por supervisord) corre como:
+
+- **Usuario**: `cloud` (NO root)
+- **Working directory**: `/home/cloud/proyectos`
+
+Esto está definido en `supervisor/opencode-web.conf` con
+`user=cloud` + `directory=/home/cloud/proyectos`. El proceso es hijo
+de supervisord, que corre como root para poder gestionar los procesos
+y para correr `fix-ownership.sh` (ver abajo).
+
+### Corrección automática de ownership
+
+`scripts/fix-ownership.sh` corre al arrancar el contenedor
+(`supervisor > fix-ownership`, `priority=1`, antes que
+`opencode-web` y `cloudflared`). Corrige el ownership de todos los
+paths bind-mountados para que coincidan con el UID de `cloud` y
+`devadmin` adentro del contenedor (resuelve el problema de UID
+mismatch entre el host y el contenedor).
+
+Cubre: `/home/cloud/proyectos`, `/home/cloud/.config/opencode`,
+`/home/cloud/.config/gh`, `/home/cloud/.local/share/opencode`,
+`/home/cloud/.cloudflared`, `/home/cloud/.ssh` y
+`/home/devadmin/.ssh`.
 
 ---
 
