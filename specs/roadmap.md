@@ -24,8 +24,9 @@ responde en `localhost:4096` dentro del contenedor. ✅
 - [x] Instalar `openssh-server` en el contenedor
 - [x] Configurar `sshd_config` para permitir autenticación por contraseña
 - [x] Agregar `supervisor/sshd.conf` para gestionar sshd
-- [x] Agregar `OPENCODE_GO_API_KEY` al `.env`
-- [x] Inyectar `OPENCODE_GO_API_KEY` al contenedor via docker-compose
+- [x] Agregar `OPENCODE_API_KEY` al `.env` (renombrada de `OPENCODE_GO_API_KEY`
+      en `fix/persistencia-bind-mounts`)
+- [x] Inyectar `OPENCODE_API_KEY` al contenedor via docker-compose
 - [x] Ejecutar `opencode auth login --provider opencode-go`
 - [x] Obtener API key de https://opencode.ai/auth
 - [x] Verificar que los modelos Go aparecen en `/models`
@@ -91,6 +92,7 @@ volúmenes se pueden respaldar.
 | Fase 2: Autenticación | ✅ Completada |
 | Fase 3: Tunnel | ✅ Completada |
 | Fase 4: GitHub + git | ✅ Completada |
+| Fix: Persistencia bind mounts | ✅ Completada |
 | Fase 5: Operación | ⬜ Pendiente |
 | Fase 6: Post-MVP | ⬜ Pendiente |
 
@@ -140,3 +142,16 @@ volúmenes se pueden respaldar.
   Metadata), inyectado al contenedor como `GH_TOKEN`
 - Flujo dual: HTTPS via `gh` (para `gh` subcommands) + SSH (para
   `git push/pull` directo)
+
+### Cambios en fix/persistencia-bind-mounts
+- Migración de named volumes a bind mounts en `./data/` (host filesystem)
+- **Bug corregido**: `opencode-config` se usaba para dos paths distintos
+  (`~/.config/opencode` y `~/.config/gh`), corrompiendo ambas configs
+- Persistencia agregada para `/home/devadmin/.ssh` (antes no persistía)
+- Rename: `OPENCODE_GO_API_KEY` → `OPENCODE_API_KEY` (nombre que
+  opencode-go espera según models.dev)
+- `auth.json` (creado por `opencode auth login`) es ahora la fuente
+  principal de auth; la env var queda como backup opcional
+- Scripts nuevos: `init-data.sh` (bootstrap idempotente) +
+  `migrate-volumes.sh` (one-shot, migra named volumes a `./data/`)
+- Ver spec: `specs/2026-07-05-fix-persistencia-bind-mounts/`

@@ -48,8 +48,28 @@ ssh -i ~/.ssh/id_ed25519_github truenas_admin@10.0.5.16
 | Fase 2: Autenticación OpenCode Go | ✅ Completada |
 | Fase 3: Tunnel + acceso remoto | ✅ Completada |
 | Fase 4: GitHub + git | ✅ Completada |
+| Fix: Persistencia bind mounts | ✅ Completada |
 | Fase 5: Operación continua | ⬜ Pendiente |
 | Fase 6: Post-MVP | ⬜ Pendiente |
+
+## Persistencia en host (`~/opencode-vps/data/`)
+
+Toda la data del agente persiste en **bind mounts a `./data/`** en el
+host, no en named volumes de Docker. Esto garantiza que **sobrevive a
+`docker compose down -v`** y es respaldable con `tar -czf backup.tar.gz ./data/`.
+
+| Subdir en `./data/` | Ruta en contenedor | Contenido |
+|---------------------|-------------------|-----------|
+| `opencode-auth/` | `/home/cloud/.local/share/opencode/` | `auth.json` (opencode-go API key) |
+| `opencode-config/` | `/home/cloud/.config/opencode/` | `opencode.json` (editable) |
+| `gh-config/` | `/home/cloud/.config/gh/` | `hosts.yml` (gh CLI auth) |
+| `cloudflared/` | `/home/cloud/.cloudflared/` | Credenciales del tunnel |
+| `ssh-cloud/` | `/home/cloud/.ssh/` | SSH keys + `known_hosts` de cloud |
+| `ssh-devadmin/` | `/home/devadmin/.ssh/` | SSH keys de devadmin |
+| `proyectos/` | `/home/cloud/proyectos/` | Workspace del agente |
+
+Bootstrap: `./scripts/init-data.sh` (idempotente). Migración desde
+named volumes antiguos: `./scripts/migrate-volumes.sh` (one-shot).
 
 ---
 
