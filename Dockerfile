@@ -24,6 +24,14 @@ RUN apt-get update && apt-get install -y \
     && mkdir -p /run/sshd
 
 # ============================================================
+# 1b. Node.js 22 LTS (pnpm via corepack, sin npm global)
+# ============================================================
+ENV NODE_VERSION=22.14.0
+RUN curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz \
+    | tar -xJf - -C /usr/local --strip-components=1 \
+    && corepack enable pnpm
+
+# ============================================================
 # 2. OpenCode (binario estatico, sin Node.js)
 # ============================================================
 RUN curl -fsSL https://opencode.ai/install | bash \
