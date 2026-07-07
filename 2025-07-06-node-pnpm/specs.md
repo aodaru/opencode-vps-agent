@@ -9,8 +9,8 @@ Insertar después del bloque de dependencias base (línea 24: `rm -rf /var/lib/a
 # 1b. Node.js 22 LTS (pnpm via corepack, sin npm global)
 # ============================================================
 ENV NODE_VERSION=22.14.0
-RUN curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz \
-    | tar -xJf - -C /usr/local --strip-components=1 \
+RUN curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz \
+    | tar -xzf - -C /usr/local --strip-components=1 \
     && corepack enable pnpm
 ```
 
