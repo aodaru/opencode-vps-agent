@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y \
     supervisor \
     xdg-utils \
     openssh-server \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /run/sshd
 
