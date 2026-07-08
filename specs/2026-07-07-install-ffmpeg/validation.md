@@ -2,21 +2,21 @@
 
 ## Estado de la fase
 
-**⬜ PENDIENTE**
+**✅ COMPLETADA**
 
 ## Criterios de éxito
 
 ### 1. Dockerfile
 
 - [x] `ffmpeg` agregado a la lista de paquetes en `apt-get install` (líneas 12-24)
-- [ ] Build de imagen exitoso
-- [ ] `docker compose config` no muestra errores de sintaxis
-- [ ] `docker compose run --rm opencode-vps ffmpeg -version` devuelve la versión
+- [x] Build de imagen exitoso
+- [x] `docker compose config` no muestra errores de sintaxis
+- [x] `docker compose run --rm opencode-vps ffmpeg -version` devuelve la versión
 
 ### 2. ffmpeg instalado y accesible
 
-- [ ] `docker compose run --rm opencode-vps ffmpeg -version` devuelve la versión
-- [ ] El usuario `cloud` puede ejecutar ffmpeg:
+- [x] `docker compose run --rm opencode-vps ffmpeg -version` devuelve la versión
+- [x] El usuario `cloud` puede ejecutar ffmpeg:
       `docker compose run --rm -u cloud opencode-vps ffmpeg -version`
 
 ## Cómo verificar
@@ -37,10 +37,10 @@ docker compose run --rm -u cloud opencode-vps ffmpeg -version 2>&1 | head -1
 
 ## Criterio de merge a main
 
-- [ ] Todos los criterios de éxito marcados
-- [ ] PR abierto via `gh pr create`
-- [ ] Validación manual ejecutada
-- [ ] No hay cambios accidentales (solo `Dockerfile` + spec)
+- [x] Todos los criterios de éxito marcados
+- [x] PR abierto via `gh pr create`
+- [x] Validación manual ejecutada
+- [x] No hay cambios accidentales (solo `Dockerfile` + spec)
 
 ## Anti-criterios (lo que NO debe pasar)
 

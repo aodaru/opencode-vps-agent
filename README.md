@@ -66,7 +66,9 @@ Fases completadas:
 - Fase 4: GitHub + git (gh CLI + SSH key + flujo de PRs)
 - Fix: Persistencia bind mounts (migracion a `./data/` en host)
 
-Pendientes: Fase 5 (operacion continua), Fase 6 (post-MVP).
+- Fase 6: Passwords dinámicos + validación persistencia
+
+Pendiente: Fase 7 (post-MVP).
 Ver `specs/roadmap.md` para detalles.
 
 ## Persistencia
@@ -108,8 +110,12 @@ Estructura de `./data/`:
 
 Tras el primer arranque del contenedor:
 
-1. **Cambiar las contrasenas por defecto** de los usuarios del contenedor
-   (el `Dockerfile` crea `devadmin` y `cloud` con `changeme`):
+1. **Contrasenas de usuarios**: se definen en `.env` via `DEVADMIN_PASSWORD`
+   y `CLOUD_PASSWORD`. Se aplican automaticamente al arrancar via supervisor
+   (set-passwords, priority=2). Si se omiten, los usuarios quedan con el
+   password aleatorio generado en el build.
+
+   Para actualizar un password sin reiniciar:
    ```bash
    docker compose exec -it opencode-vps passwd devadmin
    docker compose exec -it opencode-vps passwd cloud

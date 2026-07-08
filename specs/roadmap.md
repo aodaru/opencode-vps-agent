@@ -128,7 +128,31 @@ volúmenes se pueden respaldar. ✅
 
 ---
 
-## Fase 6 (post-MVP)
+## Chore: Instalar ffmpeg
+
+- [x] Agregar `ffmpeg` al `apt-get install` en Dockerfile
+- [x] Build + smoke test (`ffmpeg -version`)
+- [x] Verificar que `cloud` puede ejecutarlo
+- [x] PR mergeado a `main`
+
+**Criterio de éxito:** `ffmpeg -version` funciona dentro del contenedor como root y como `cloud`. ✅
+
+---
+
+## Fase 6: Passwords dinámicos + persistencia
+
+- [x] Variables `DEVADMIN_PASSWORD` y `CLOUD_PASSWORD` en `.env`
+- [x] Script `set-passwords.sh` que aplica los passwords al arrancar
+- [x] Supervisor conf `set-passwords.conf` (priority=2)
+- [x] Dockerfile: eliminados passwords hardcoded de `devadmin` y `cloud`
+- [x] Validación: cambios en `/home/cloud/.config/opencode/` persisten tras `down -v`
+- [x] Documentación actualizada (setup.sh, README, AGENTS, tech-stack)
+
+**Criterio de éxito:** Passwords se configuran desde `.env` sin cambiar el Dockerfile, y la config de opencode sobrevive a `docker compose down -v && docker compose up -d`. ✅
+
+---
+
+## Fase 7 (post-MVP)
 
 - [ ] Multi-agente (distintos proyectos/configs)
 - [ ] CI/CD pipeline para actualizar OpenCode
@@ -149,7 +173,9 @@ volúmenes se pueden respaldar. ✅
 | Fix: Persistencia bind mounts | ✅ Completada (PR #2 mergeado) |
 | Fix: usuario cloud + workdir proyectos | ✅ Completada (PR #3 mergeado) |
 | Fase 5: Operación | ✅ Completada |
-| Fase 6: Post-MVP | ⬜ Pendiente |
+| Chore: ffmpeg | ✅ Completada |
+| Fase 6: Passwords dinámicos + persistencia | ✅ Completada |
+| Fase 7: Post-MVP | ⬜ Pendiente |
 
 ---
 

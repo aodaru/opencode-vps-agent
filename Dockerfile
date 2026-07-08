@@ -61,11 +61,9 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
 # 5. Usuarios: devadmin (sudo) + cloud (agente, sin sudo)
 # ============================================================
 RUN useradd -m -s /bin/bash devadmin \
-    && echo "devadmin:changeme" | chpasswd \
     && adduser devadmin sudo
 
-RUN useradd -m -s /bin/bash cloud \
-    && echo "cloud:changeme" | chpasswd
+RUN useradd -m -s /bin/bash cloud
 
 # ============================================================
 # 5b. Configurar SSH (permitir auth por contraseña)
@@ -94,8 +92,11 @@ COPY supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 COPY supervisor/opencode-web.conf /etc/supervisor/conf.d/opencode-web.conf
 COPY supervisor/sshd.conf /etc/supervisor/conf.d/sshd.conf
 COPY supervisor/fix-ownership.conf /etc/supervisor/conf.d/fix-ownership.conf
+COPY supervisor/set-passwords.conf /etc/supervisor/conf.d/set-passwords.conf
+COPY scripts/set-passwords.sh /usr/local/bin/set-passwords.sh
 
 RUN chmod +x /usr/local/bin/fix-ownership.sh \
+    && chmod +x /usr/local/bin/set-passwords.sh \
     && chown -R cloud:cloud /home/cloud/.config/opencode/opencode.json \
     && chown -R cloud:cloud /home/cloud/.cloudflared/config.yml
 

@@ -53,6 +53,8 @@ persistencia. Esto reemplaza los named volumes (que se borraban con
 | `OPENCODE_API_KEY` | API key de OpenCode Go (provider). Renombrada de `OPENCODE_GO_API_KEY` (el nombre original no coincidía con el que opencode-go busca según models.dev) |
 | `CLOUDFLARE_TUNNEL_TOKEN` | Token del tunnel de Cloudflare |
 | `GH_TOKEN` | PAT de GitHub para `gh auth login` |
+| `DEVADMIN_PASSWORD` | Password del usuario devadmin (se aplica al arrancar via supervisor) |
+| `CLOUD_PASSWORD` | Password del usuario cloud (se aplica al arrancar via supervisor) |
 
 ## Directorios persistentes
 

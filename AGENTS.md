@@ -51,7 +51,9 @@ ssh -i ~/.ssh/id_ed25519_github truenas_admin@10.0.5.16
 | Fix: Persistencia bind mounts | ✅ Completada |
 | Fix: usuario cloud + workdir proyectos | ✅ Completada |
 | Fase 5: Operación continua | ✅ Completada |
-| Fase 6: Post-MVP | ⬜ Pendiente |
+| Chore: ffmpeg | ✅ Completada |
+| Fase 6: Passwords dinámicos + persistencia | ✅ Completada |
+| Fase 7: Post-MVP | ⬜ Pendiente |
 
 ## Persistencia en host (`~/opencode-vps/data/`)
 
