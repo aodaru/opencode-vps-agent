@@ -11,6 +11,8 @@ services:
       - CLOUDFLARE_TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
       - OPENCODE_API_KEY=${OPENCODE_API_KEY}
       - GH_TOKEN=${GH_TOKEN}
+      - DEVADMIN_PASSWORD=${DEVADMIN_PASSWORD}
+      - CLOUD_PASSWORD=${CLOUD_PASSWORD}
       # Si usas un proxy corporativo:
       # - HTTPS_PROXY=http://proxy.example.com:8080
       # - NO_PROXY=localhost,127.0.0.1

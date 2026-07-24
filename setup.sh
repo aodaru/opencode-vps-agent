@@ -16,11 +16,17 @@ echo -e "${GREEN}========================================${NC}"
 echo ""
 
 # ============================================================
-# 1. Cambiar contrasenas por defecto (REQUERIDO antes de exponer)
+# 1. Contrasenas de usuarios (desde .env)
 # ============================================================
-echo -e "${YELLOW}[1/5] Cambiar contrasenas por defecto${NC}"
-echo "devadmin y cloud se crean con password 'changeme' (ver Dockerfile:54-59)."
-echo "Cambiar ANTES de cualquier uso serio:"
+echo -e "${YELLOW}[1/5] Contrasenas de usuarios (desde .env)${NC}"
+echo "Los passwords de devadmin y cloud se definen en .env:"
+echo "  DEVADMIN_PASSWORD=<password>"
+echo "  CLOUD_PASSWORD=<password>"
+echo ""
+echo "Se aplican automaticamente al arrancar el contenedor via supervisor"
+echo "(set-passwords, priority=2). No es necesario cambiar manualmente."
+echo ""
+echo "Para actualizar un password sin reiniciar:"
 echo "  docker compose exec -it opencode-vps passwd devadmin"
 echo "  docker compose exec -it opencode-vps passwd cloud"
 echo ""
