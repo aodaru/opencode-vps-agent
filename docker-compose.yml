@@ -8,7 +8,6 @@ services:
     restart: unless-stopped
     environment:
       - OPENCODE_SERVER_PASSWORD=${OPENCODE_SERVER_PASSWORD}
-      - CLOUDFLARE_TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
       - OPENCODE_API_KEY=${OPENCODE_API_KEY}
       - GH_TOKEN=${GH_TOKEN}
       - DEVADMIN_PASSWORD=${DEVADMIN_PASSWORD}
@@ -32,8 +31,6 @@ services:
       - ./data/opencode-config:/home/cloud/.config/opencode
       # Auth de gh CLI (hosts.yml)
       - ./data/gh-config:/home/cloud/.config/gh
-      # Credenciales y config del Cloudflare Tunnel
-      - ./data/cloudflared:/home/cloud/.cloudflared
       # SSH keys del usuario cloud
       - ./data/ssh-cloud:/home/cloud/.ssh
       # SSH keys del usuario devadmin (NUEVO en este fix)
@@ -41,10 +38,9 @@ services:
       # Proyectos y codigo fuente del agente
       - ./data/proyectos:/home/cloud/proyectos
     ports:
-      # Puerto 4096 para Cloudflare Tunnel en el host
+      # Puerto 4096 para OpenCode Web UI
       - "4096:4096"
       # Puerto 22 solo para acceso SSH directo (fallback)
-      # Si usas Cloudflare Tunnel exclusivamente, puedes quitar esta linea
       - "2222:22"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4096"]

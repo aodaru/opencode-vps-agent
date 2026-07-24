@@ -2,7 +2,7 @@
 # ============================================================
 # init-data.sh - Inicializa ./data/ para bind mounts
 #
-# Crea los 7 subdirs que se montan en el contenedor y siembra
+# Crea los 6 subdirs que se montan en el contenedor y siembra
 # ./data/opencode-config/opencode.json desde el repo.
 #
 # Es IDEMPOTENTE: se puede correr multiples veces sin efectos
@@ -31,7 +31,6 @@ declare -A DIRS=(
   [opencode-auth]=755
   [opencode-config]=755
   [gh-config]=755
-  [cloudflared]=755
   [ssh-cloud]=700
   [ssh-devadmin]=700
   [proyectos]=755

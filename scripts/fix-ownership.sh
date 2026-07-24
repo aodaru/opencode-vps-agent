@@ -114,6 +114,4 @@ fix_dir "cloud" "/home/cloud/proyectos"
 fix_dir "cloud" "/home/cloud/.config/opencode"
 fix_dir "cloud" "/home/cloud/.config/gh"
 fix_dir "cloud" "/home/cloud/.local/share/opencode"
-fix_dir "cloud" "/home/cloud/.cloudflared"
-
 log "Ownership fix complete"

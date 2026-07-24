@@ -1,32 +1,28 @@
 # OpenCode VPS Agent
 
-Agente OpenCode 24/7 corriendo en un VPS, accesible desde cualquier
-dispositivo via navegador gracias a un Cloudflare Tunnel. Pensado para
-uso personal como dev playground: el agente sobrevive a que tu maquina
-local se duerma, pierda conexion o se apague.
+Agente OpenCode 24/7 corriendo en un VPS, accesible via web browser.
+Pensado para uso personal como dev playground: el agente sobrevive
+a que tu maquina local se duerma, pierda conexion o se apague.
 
 ## Caracteristicas
 
 - OpenCode CLI embebido (binario estatico, sin Node.js)
 - Web UI servida en el puerto 4096
-- Acceso remoto seguro via Cloudflare Tunnel (sin abrir puertos)
+- Acceso remoto via IP del VPS (puerto 4096) o Cloudflare Tunnel en el host
 - Fallback SSH en el puerto 2222
 - Persistencia de auth, config, proyectos y SSH keys en **bind mounts a `./data/`** (host filesystem)
 - Hardening base: UFW, fail2ban, SSH sin root, sudo no password
-- Supervisord gestiona OpenCode Web, cloudflared y sshd
+- Supervisord gestiona OpenCode Web, sshd y healthcheck
 
 ## Stack
 
 - Ubuntu 24.04 LTS (Docker)
 - OpenCode + OpenCode Go (model provider)
-- Cloudflare Tunnel
 - GitHub CLI
 
 ## Requisitos
 
 - VPS con Docker + Docker Compose
-- Dominio delegado a Cloudflare
-- Tunnel creado en Cloudflare (token en `CLOUDFLARE_TUNNEL_TOKEN`)
 - API key de OpenCode Go (en `OPENCODE_API_KEY`)
 
 ## Uso rapido
@@ -48,9 +44,9 @@ local se duerma, pierda conexion o se apague.
 
 ## Estructura del repo
 
-- `Dockerfile` - imagen base (Ubuntu 24.04 + opencode + cloudflared + gh)
+- `Dockerfile` - imagen base (Ubuntu 24.04 + opencode + gh)
 - `docker-compose.yml` - servicios, puertos y volumenes
-- `config/` - opencode.json y cloudflared.yml precargados
+- `config/` - opencode.json precargado
 - `supervisor/` - supervisord y servicios (opencode-web, sshd)
 - `setup.sh` - guia post-arranque (auth, tunnel, GitHub CLI, SSH hardening)
 - `specs/` - mission, roadmap, tech-stack
@@ -62,11 +58,11 @@ Fases completadas:
 
 - Fase 1: Contenedor base
 - Fase 2: Autenticacion OpenCode Go + SSH
-- Fase 3: Cloudflare Tunnel + acceso remoto
+- Fase 3: Cloudflare Tunnel (obsoleto, removido del contenedor)
 - Fase 4: GitHub + git (gh CLI + SSH key + flujo de PRs)
 - Fix: Persistencia bind mounts (migracion a `./data/` en host)
-
 - Fase 6: Passwords dinámicos + validación persistencia
+- Remover Cloudflare Tunnel del contenedor
 
 Pendiente: Fase 7 (post-MVP).
 Ver `specs/roadmap.md` para detalles.
@@ -95,7 +91,7 @@ Estructura de `./data/`:
 | `opencode-auth/` | `auth.json` (opencode-go API key) |
 | `opencode-config/` | `opencode.json` (config editable) |
 | `gh-config/` | `hosts.yml` (gh CLI auth) |
-| `cloudflared/` | Credenciales del tunnel |
+| ~~`cloudflared/`~~ | ~~Credenciales del tunnel~~ (eliminado) |
 | `ssh-cloud/` | SSH keys + `known_hosts` de `cloud` |
 | `ssh-devadmin/` | SSH keys de `devadmin` |
 | `proyectos/` | Workspace del agente |
@@ -131,13 +127,12 @@ Tras el primer arranque del contenedor:
    verificar/corrigir manualmente:
    ```bash
    docker compose exec opencode-vps bash -c '
-     for d in /home/cloud/proyectos \
-              /home/cloud/.config/opencode \
-              /home/cloud/.config/gh \
-              /home/cloud/.local/share/opencode \
-              /home/cloud/.cloudflared \
-              /home/cloud/.ssh \
-              /home/devadmin/.ssh; do
+  for d in /home/cloud/proyectos \
+               /home/cloud/.config/opencode \
+               /home/cloud/.config/gh \
+               /home/cloud/.local/share/opencode \
+               /home/cloud/.ssh \
+               /home/devadmin/.ssh; do
        stat -c "%U:%G %n" "$d"
      done
    '
@@ -146,7 +141,7 @@ Tras el primer arranque del contenedor:
    #   cloud:cloud       /home/cloud/.config/opencode
    #   cloud:cloud       /home/cloud/.config/gh
    #   cloud:cloud       /home/cloud/.local/share/opencode
-   #   cloud:cloud       /home/cloud/.cloudflared
+
    #   cloud:cloud       /home/cloud/.ssh
    #   devadmin:devadmin /home/devadmin/.ssh
    # Si algo aparece con owner distinto:
@@ -169,6 +164,6 @@ Tras el primer arranque del contenedor:
    #   /home/cloud/proyectos
    ```
 
-4. Rotar la API key de OpenCode Go y el token de Cloudflare Tunnel.
+4. Rotar la API key de OpenCode Go.
 
 5. Habilitar autenticacion por clave publica en SSH y deshabilitar password auth.

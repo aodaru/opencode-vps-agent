@@ -37,15 +37,19 @@ un proyecto. ✅
 
 ---
 
-## Fase 3: Tunnel + acceso remoto
+## Fase 3: Tunnel + acceso remoto (OBSOLETO)
 
-- [x] Cloudflared dentro del contenedor con token (no credentials-file)
-- [x] Protocolo HTTP/2 para evitar problemas QUIC en Docker
-- [x] Verificar acceso desde browser externo (móvil, otra red)
-- [x] Confirmar que `OPENCODE_SERVER_PASSWORD` protege el acceso
+Cloudflare Tunnel se eliminó del contenedor. El tunnel existe en el
+HOST del VPS y no es necesario dentro del contenedor.
 
-**Criterio de éxito:** Se puede acceder a OpenCode desde el celular vía
-`https://opencode.adalgarcia.com`. ✅
+- [x] ~~Cloudflared dentro del contenedor con token (no credentials-file)~~ → removido
+- [x] ~~Protocolo HTTP/2 para evitar problemas QUIC en Docker~~ → removido
+- [x] ~~Verificar acceso desde browser externo (móvil, otra red)~~ → removido
+- [x] ~~Confirmar que `OPENCODE_SERVER_PASSWORD` protege el acceso~~ → removido
+
+Ver spec: `specs/2026-07-23-opencode-without-tunnel/`
+
+**Estado:** Reemplazado. Cloudflared ya no está en el contenedor. ❌
 
 ---
 
@@ -168,13 +172,14 @@ volúmenes se pueden respaldar. ✅
 |------|--------|
 | Fase 1: Contenedor base | ✅ Completada |
 | Fase 2: Autenticación | ✅ Completada |
-| Fase 3: Tunnel | ✅ Completada |
+| Fase 3: Tunnel | ❌ Reemplazada (cloudflared removido del contenedor) |
 | Fase 4: GitHub + git | ✅ Completada |
 | Fix: Persistencia bind mounts | ✅ Completada (PR #2 mergeado) |
 | Fix: usuario cloud + workdir proyectos | ✅ Completada (PR #3 mergeado) |
 | Fase 5: Operación | ✅ Completada |
 | Chore: ffmpeg | ✅ Completada |
 | Fase 6: Passwords dinámicos + persistencia | ✅ Completada |
+| Feature: Remover Cloudflare Tunnel | ✅ Completada (PR #?) |
 | Fase 7: Post-MVP | ⬜ Pendiente |
 
 ---
@@ -186,23 +191,19 @@ volúmenes se pueden respaldar. ✅
 - **Usuario SSH**: `truenas_admin` con key `~/.ssh/id_ed25519_github`
 - **Directorio**: `~/opencode-vps/`
 - **Password web**: `OPENCODE_SERVER_PASSWORD` en `.env`
-- **Tunnel**: Cloudflare token-based (no credentials-file)
-- **URL**: `https://opencode.adalgarcia.com`
 
 ### Cambios realizados al Dockerfile
 - Agregado `xdg-utils` para evitar crash de opencode web
 - Binario `opencode` copiado a `/usr/local/bin/` para acceso global
-- `supervisor` gestiona `opencode-web` + `cloudflared`
+- `supervisor` gestiona `opencode-web` + `sshd`
 
 ### Cambios realizados al compose
 - Eliminado campo `version` (obsoleto en Docker Compose v2)
 - Secretos externalizados a `.env` via `${VAR}` syntax
-- Puerto `4096:4096` expuesto sin binding de IP (cloudflared necesita acceso)
+- Puerto `4096:4096` expuesto para OpenCode Web UI
 - Puerto `2222:22` mapeado como fallback SSH
 
 ### Cambios realizados al supervisor
-- Cloudflared usa `%(ENV_CLOUDFLARE_TUNNEL_TOKEN)s` desde variable de entorno
-- Protocolo HTTP/2 forzado (`--protocol http2`) para evitar problemas QUIC en Docker
 - `xdg-open` dummy creado para evitar crash de opencode web
 - `HOME="/home/cloud"` en environment de opencode-web (supervisord no setea HOME
   automáticamente al usar `user=cloud`, causaba `EACCES` al escribir en `/root/`)
@@ -210,8 +211,7 @@ volúmenes se pueden respaldar. ✅
 ### Notas importantes
 - Username por defecto para HTTP Basic Auth: `opencode`
 - Cambiable con `OPENCODE_SERVER_USERNAME` en `.env`
-- Cloudflared dentro del contenedor (no en el host) con token
-- Dashboard de Cloudflare apunta a `http://127.0.0.1:4096` (IPv4, no localhost)
+- Cloudflared removido del contenedor. El tunnel se configura en el HOST.
 
 ### Cambios realizados en Fase 4 (GitHub + git)
 - `gh` CLI instalado en Dockerfile

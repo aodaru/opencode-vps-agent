@@ -18,7 +18,6 @@ La máquina local se suspende, pierde conectividad, o simplemente se apaga. Con 
 
 ### Contexto técnico
 Adaptado de una guía original de Claude Code a OpenCode, aprovechando:
-- **Cloudflare Tunnel** existente en el host (sin abrir puertos)
 - **Docker Compose** para aislamiento y reproducibilidad
 - **OpenCode Go** como proveedor de modelos (bajo costo, alta confiabilidad)
 
@@ -53,6 +52,7 @@ ssh -i ~/.ssh/id_ed25519_github truenas_admin@10.0.5.16
 | Fase 5: Operación continua | ✅ Completada |
 | Chore: ffmpeg | ✅ Completada |
 | Fase 6: Passwords dinámicos + persistencia | ✅ Completada |
+| Feature: Remover Cloudflare Tunnel | ✅ Completada |
 | Fase 7: Post-MVP | ⬜ Pendiente |
 
 ## Persistencia en host (`~/opencode-vps/data/`)
@@ -66,7 +66,7 @@ host, no en named volumes de Docker. Esto garantiza que **sobrevive a
 | `opencode-auth/` | `/home/cloud/.local/share/opencode/` | `auth.json` (opencode-go API key) |
 | `opencode-config/` | `/home/cloud/.config/opencode/` | `opencode.json` (editable) |
 | `gh-config/` | `/home/cloud/.config/gh/` | `hosts.yml` (gh CLI auth) |
-| `cloudflared/` | `/home/cloud/.cloudflared/` | Credenciales del tunnel |
+| ~~`cloudflared/`~~ | ~~`/home/cloud/.cloudflared/`~~ | ~~Credenciales del tunnel~~ (eliminado) |
 | `ssh-cloud/` | `/home/cloud/.ssh/` | SSH keys + `known_hosts` de cloud |
 | `ssh-devadmin/` | `/home/devadmin/.ssh/` | SSH keys de devadmin |
 | `proyectos/` | `/home/cloud/proyectos/` | Workspace del agente |
@@ -90,15 +90,14 @@ y para correr `fix-ownership.sh` (ver abajo).
 
 `scripts/fix-ownership.sh` corre al arrancar el contenedor
 (`supervisor > fix-ownership`, `priority=1`, antes que
-`opencode-web` y `cloudflared`). Corrige el ownership de todos los
+`opencode-web`). Corrige el ownership de todos los
 paths bind-mountados para que coincidan con el UID de `cloud` y
 `devadmin` adentro del contenedor (resuelve el problema de UID
 mismatch entre el host y el contenedor).
 
 Cubre: `/home/cloud/proyectos`, `/home/cloud/.config/opencode`,
 `/home/cloud/.config/gh`, `/home/cloud/.local/share/opencode`,
-`/home/cloud/.cloudflared`, `/home/cloud/.ssh` y
-`/home/devadmin/.ssh`.
+`/home/cloud/.ssh` y `/home/devadmin/.ssh`.
 
 ---
 
@@ -110,7 +109,7 @@ Cubre: `/home/cloud/proyectos`, `/home/cloud/.config/opencode`,
 | Contenedor | Docker + Docker Compose |
 | Agente | OpenCode (binario estático) |
 | Provider | OpenCode Go ($10/mes) |
-| Tunnel | Cloudflare Tunnel (en el HOST) |
+| Tunnel | Cloudflare Tunnel (en el HOST, no en el contenedor) |
 | CLI GitHub | gh |
 
 ---
@@ -122,6 +121,5 @@ HOST (VPS 10.0.5.16)           CONTENEDOR
 ─────────────────────────         ────────────────────────
 SSH (port 22)                     opencode web
 cloudflared (tunnel existente)    → expone :4096
-  ├─ servicio A                   →        otro servicio
   └─ opencode.adalgarcia.com      → 4096   OpenCode Web UI
 ```

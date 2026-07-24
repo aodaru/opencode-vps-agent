@@ -1,6 +1,6 @@
 # ============================================================
 # Dockerfile: OpenCode VPS Agent
-# Ubuntu 24.04 + OpenCode (binario estatico) + Cloudflare Tunnel
+# Ubuntu 24.04 + OpenCode (binario estatico) + Supervisor
 # ============================================================
 FROM ubuntu:24.04
 
@@ -40,15 +40,7 @@ RUN curl -fsSL https://opencode.ai/install | bash \
     && chmod +x /usr/local/bin/opencode
 
 # ============================================================
-# 3. cloudflared (tunel Cloudflare)
-# ============================================================
-RUN curl -fsSL https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb \
-    -o /tmp/cloudflared.deb \
-    && dpkg -i /tmp/cloudflared.deb \
-    && rm /tmp/cloudflared.deb
-
-# ============================================================
-# 4. GitHub CLI (gh)
+# 3. GitHub CLI (gh)
 # ============================================================
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
@@ -58,7 +50,7 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
     && apt-get update && apt-get install gh -y
 
 # ============================================================
-# 5. Usuarios: devadmin (sudo) + cloud (agente, sin sudo)
+# 4. Usuarios: devadmin (sudo) + cloud (agente, sin sudo)
 # ============================================================
 RUN useradd -m -s /bin/bash devadmin \
     && adduser devadmin sudo
@@ -66,18 +58,17 @@ RUN useradd -m -s /bin/bash devadmin \
 RUN useradd -m -s /bin/bash cloud
 
 # ============================================================
-# 5b. Configurar SSH (permitir auth por contraseña)
+# 4b. Configurar SSH (permitir auth por contraseña)
 # ============================================================
 RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config \
     && sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin no/' /etc/ssh/sshd_config \
     && echo "AllowUsers devadmin cloud" >> /etc/ssh/sshd_config
 
 # ============================================================
-# 6. Workspace del agente
+# 5. Workspace del agente
 # ============================================================
 RUN mkdir -p /home/cloud/proyectos \
     && mkdir -p /home/cloud/.config/opencode \
-    && mkdir -p /home/cloud/.cloudflared \
     && mkdir -p /home/cloud/.local/share/opencode \
     && mkdir -p /home/cloud/.ssh \
     && mkdir -p /home/devadmin/.ssh \
@@ -86,7 +77,6 @@ RUN mkdir -p /home/cloud/proyectos \
 
 # Copiar configuraciones pre-creadas
 COPY config/opencode.json /home/cloud/.config/opencode/opencode.json
-COPY config/cloudflared.yml /home/cloud/.cloudflared/config.yml
 COPY scripts/fix-ownership.sh /usr/local/bin/fix-ownership.sh
 COPY supervisor/supervisord.conf /etc/supervisor/supervisord.conf
 COPY supervisor/opencode-web.conf /etc/supervisor/conf.d/opencode-web.conf
@@ -97,11 +87,10 @@ COPY scripts/set-passwords.sh /usr/local/bin/set-passwords.sh
 
 RUN chmod +x /usr/local/bin/fix-ownership.sh \
     && chmod +x /usr/local/bin/set-passwords.sh \
-    && chown -R cloud:cloud /home/cloud/.config/opencode/opencode.json \
-    && chown -R cloud:cloud /home/cloud/.cloudflared/config.yml
+    && chown -R cloud:cloud /home/cloud/.config/opencode/opencode.json
 
 # ============================================================
-# 7. Setup script
+# 6. Setup script
 # ============================================================
 COPY setup.sh /usr/local/bin/setup-opencode.sh
 RUN chmod +x /usr/local/bin/setup-opencode.sh
@@ -109,5 +98,5 @@ RUN chmod +x /usr/local/bin/setup-opencode.sh
 WORKDIR /home/cloud/proyectos
 EXPOSE 22
 
-# Supervisor gestiona opencode-web + cloudflared
+# Supervisor gestiona opencode-web, sshd y healthcheck
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]

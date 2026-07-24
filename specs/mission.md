@@ -24,6 +24,6 @@ Con OpenCode en un VPS:
 
 Adaptado de una guía original de Claude Code a OpenCode, aprovechando:
 
-- **Cloudflare Tunnel** existente en el host (sin abrir puertos)
 - **Docker Compose** para aislamiento y reproducibilidad
 - **OpenCode Go** como proveedor de modelos (bajo costo, alta confiabilidad)
+- **Cloudflare Tunnel** opcional en el host para acceso remoto (sin abrir puertos)

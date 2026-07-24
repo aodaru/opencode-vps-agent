@@ -6,7 +6,7 @@
 | Contenedor | Docker + Docker Compose | última estable |
 | Agente     | OpenCode  | binario estático (último release) |
 | Provider   | OpenCode Go | suscripción $10/mes |
-| Tunnel     | Cloudflare Tunnel | cloudflared (instalado en el HOST) |
+| Tunnel     | Cloudflare Tunnel | en el HOST, NO en el contenedor |
 | CLI GitHub | gh        | última estable |
 | Shell      | bash + tmux | — |
 | SSH        | openssh-server | dentro del contenedor |
@@ -18,7 +18,6 @@ HOST (VPS)                          CONTENEDOR
 ─────────────────────────           ────────────────────────
 SSH (port 22)                       opencode web
 cloudflared (tunnel existente)      → expone :4096
-  ├─ servicio A                     →        otro servicio
   └─ opencode.tudominio.com         → 4096   OpenCode Web UI
 ```
 
@@ -31,9 +30,10 @@ binario autocontenido. No requiere Node.js, Bun ni npm en el contenedor.
 
 ### Cloudflare Tunnel en el HOST
 
-El tunnel ya existe y se usa para otros servicios. No se instala cloudflared
-dentro del contenedor. Solo se agrega una regla de ingress al `config.yml`
-del host apuntando a `http://127.0.0.1:4096`.
+El tunnel ya existe en el host y se usa para otros servicios.
+Cloudflared no está instalado dentro del contenedor. Solo se
+necesita agregar una regla de ingress al `config.yml` del host
+apuntando a `http://127.0.0.1:4096`.
 
 ### Docker Compose
 
@@ -51,7 +51,7 @@ persistencia. Esto reemplaza los named volumes (que se borraban con
 | `OPENCODE_SERVER_PASSWORD` | Autenticación web (HTTP Basic Auth) |
 | `OPENCODE_CONFIG` | Ruta al archivo de configuración |
 | `OPENCODE_API_KEY` | API key de OpenCode Go (provider). Renombrada de `OPENCODE_GO_API_KEY` (el nombre original no coincidía con el que opencode-go busca según models.dev) |
-| `CLOUDFLARE_TUNNEL_TOKEN` | Token del tunnel de Cloudflare |
+| ~~`CLOUDFLARE_TUNNEL_TOKEN`~~ | ~~Token del tunnel de Cloudflare~~ (eliminado) |
 | `GH_TOKEN` | PAT de GitHub para `gh auth login` |
 | `DEVADMIN_PASSWORD` | Password del usuario devadmin (se aplica al arrancar via supervisor) |
 | `CLOUD_PASSWORD` | Password del usuario cloud (se aplica al arrancar via supervisor) |
@@ -65,7 +65,7 @@ Bind mounts a `./data/` en el host (no son named volumes):
 | `opencode-auth/` | `/home/cloud/.local/share/opencode/` | `auth.json` (opencode-go API key) |
 | `opencode-config/` | `/home/cloud/.config/opencode/` | `opencode.json` (editable) |
 | `gh-config/` | `/home/cloud/.config/gh/` | `hosts.yml` (gh CLI auth) |
-| `cloudflared/` | `/home/cloud/.cloudflared/` | Credenciales del tunnel |
+| ~~`cloudflared/`~~ | ~~`/home/cloud/.cloudflared/`~~ | ~~Credenciales del tunnel~~ (eliminado) |
 | `ssh-cloud/` | `/home/cloud/.ssh/` | SSH keys + `known_hosts` de cloud |
 | `ssh-devadmin/` | `/home/devadmin/.ssh/` | SSH keys de devadmin |
 | `proyectos/` | `/home/cloud/proyectos/` | Workspace del agente |
